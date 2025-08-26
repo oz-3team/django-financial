@@ -8,6 +8,8 @@ dependencies = [
     "django-restframework>=0.0.1",
     "drf-spectacular>=0.28.0",
     "drf-yasg>=1.21.10",
+    "gunicorn>=21.2",
+    "uvicorn>=0.24.0"
 ]
 
 [dependency-groups]
