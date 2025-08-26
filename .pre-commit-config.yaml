@@ -1,0 +1,18 @@
+repos:
+  - repo: https://github.com/ambv/black
+    rev: ''
+    hooks:
+      - id: black #코드 포멧터, 코드 스타일을 통일시켜 줍니다.
+        language_version: python3.8
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: ''
+    hooks:
+      - id: flake8 #코드 린터, PEP8 규악을 지켰는지 검사합니다.
+  - repo: https://github.com/pycqa/isort
+    rev: ''
+    hooks:
+      - id: isort #파이썬 import를 정렬해주는 라이브러리입니다.
+  - repo: https://github.com/necaris/pre-commit-pyright
+    rev: ''
+    hooks:
+      - id: pyright #파이썬에서 타입을 체크해주는 라이브러리입니다. (mypy로 대체가능)
