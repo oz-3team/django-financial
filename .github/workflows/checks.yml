@@ -3,7 +3,7 @@ name: Code Quality Checks
 on:
   push:
     branches:
-      - main
+      - develop
   pull_request:
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
     - name: Install Packages & Libraries
-      run: uv sync --dev-packages
+      run: uv sync --all-packages
 
     - name: Run ruff (Linting)
       run: uv run ruff check .
