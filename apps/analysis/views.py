@@ -1,11 +1,21 @@
-from django.shortcuts import render
+from rest_framework import generics
 from .models import Analysis
-from django.views.generic import ListView
+from .serializers import AnalysisSerializer
 
-class AnalysisListView(ListView):
-    model = Analysis
-    template_name = 'analysis/analysis_list.html'
-    context_object_name = 'analyses'
+class AnalysisListCreateAPIView(generics.ListCreateAPIView):
+    queryset = Analysis.objects.all()
+    serializer_class = AnalysisSerializer
+
+    def get_queryset(self):
+        return Analysis.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class AnalysisRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Analysis.objects.all()
+    serializer_class = AnalysisSerializer
 
     def get_queryset(self):
         return Analysis.objects.filter(user=self.request.user)
