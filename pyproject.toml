@@ -9,7 +9,9 @@ dependencies = [
     "drf-spectacular>=0.28.0",
     "drf-yasg>=1.21.10",
     "gunicorn>=21.2",
-    "uvicorn>=0.24.0"
+    "pillow>=11.3.0",
+    "psycopg2-binary>=2.9.10",
+    "uvicorn>=0.24.0",
 ]
 
 [dependency-groups]
