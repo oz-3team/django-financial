@@ -1,5 +1,7 @@
 #!/bin/bash
-set -e  # 에러 발생 시 스크립트 종료
+
+# 에러 발생 시 스크립트 종료
+set -e
 
 # DB ready 대기
 until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT; do
