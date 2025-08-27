@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'apps.users.apps.UsersConfig',
     'apps.notification.apps.NotificationConfig',
     'apps.analysis.apps.AnalysisConfig',
     'apps.accounts.apps.AccountsConfig',
@@ -131,4 +132,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'apps.User'
+AUTH_USER_MODEL = 'users.User'
