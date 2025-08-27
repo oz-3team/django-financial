@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'apps.notification.apps.NotificationConfig',
     'apps.analysis.apps.AnalysisConfig',
+    'apps.accounts.apps.AccountsConfig',
 ]
 
 MIDDLEWARE = [
