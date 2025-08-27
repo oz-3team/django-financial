@@ -1,8 +1,8 @@
 import uuid
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 from django.conf import settings
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q
 from django.utils import timezone
 
 CURRENCY_CHOICES = [
