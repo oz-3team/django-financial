@@ -172,4 +172,5 @@ class Migration(migrations.Migration):
             name="transactionhistory",
             unique_together={("account", "idempotency_key")},
         ),
+    ]
 
