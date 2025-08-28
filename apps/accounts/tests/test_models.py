@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from uuid import uuid4
-from typing import Any, Dict, Iterable, Optional, Tuple, Type
+from typing import Any, Dict, Optional, Tuple, Type
 
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
