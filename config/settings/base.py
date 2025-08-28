@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from datetime import timedelta
 
 # BASE DIR
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
