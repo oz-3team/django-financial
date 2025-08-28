@@ -56,3 +56,20 @@ erDiagram
     USERS ||--o{ ANALYSIS : "분석 요청"
     USERS ||--o{ NOTIFICATIONS : "알림 수신"
 ```
+
+## 플로우 차트: 사용자 인증 흐름
+```mermaid
+flowchart TD
+    A[사용자 로그인 시도] --> B[이메일, 비밀번호 입력]
+    B --> C{인증 정보 검증}
+    C -- 인증 성공 --> D[Access, Refresh 토큰 생성]
+    D --> E[토큰을 HttpOnly, Secure 쿠키에 저장]
+    E --> F[로그인 성공 응답]
+    C -- 인증 실패 --> G[로그인 실패 응답]
+    F --> H{Access 토큰 유효?}
+    H -- 예 --> I[서비스 접근 허용]
+    H -- 아니오 --> J[Refresh 토큰으로 토큰 재발급 시도]
+    J --> K{재발급 성공?}
+    K -- 예 --> I
+    K -- 아니오 --> L[재로그인 요청]
+```

@@ -41,9 +41,9 @@ INSTALLED_APPS = [
 
     # 로컬 앱
     'apps.users.apps.UsersConfig',
+    'apps.accounts.apps.AccountsConfig',
     'apps.notification.apps.NotificationConfig',
     'apps.analysis.apps.AnalysisConfig',
-    'apps.accounts.apps.AccountsConfig',
     'apps.core.apps.CoreConfig',
 ]
 

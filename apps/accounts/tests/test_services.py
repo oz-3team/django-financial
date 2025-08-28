@@ -149,7 +149,7 @@ class ServicesSmokeTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
-            username="svcuser", email="svc@example.com", password="pass1234!", is_active=True
+            email="svc@example.com", password="pass1234!", is_active=True
         )
 
         cls.AccountModel = _get_model("accounts", "Account", "Accounts")
