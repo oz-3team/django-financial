@@ -50,8 +50,12 @@ jobs:
 #      env:
 #        DATABASE_URL: postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}
 #      run: |
-#        uv run python manage.py makemigrations
 #        uv run python manage.py migrate
+
+    - name: Wait for DB
+      env:
+        DATABASE_URL: postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}
+      run: uv run python manage.py wait_for_db
 
     - name: Run Django Tests
       env:
