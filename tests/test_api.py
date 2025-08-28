@@ -326,12 +326,3 @@ class APISmokeTests(TestCase):
                 return
         self.skipTest("notification detail 엔드포인트를 찾지 못함")
 # tests/test_api.py  (변경점만 요약: 후보 추가)
-# ...
-        cls.TransactionModel = _get_model(
-            ("accounts", "Transaction"),
-            ("accounts", "Transactions"),
-            ("accounts", "TransactionHistory"),  # ← 추가
-            ("transactions", "Transaction"),
-            ("transactions", "Transactions"),
-        )
-# ...

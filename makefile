@@ -1,29 +1,117 @@
-.PHONY: run migrate lint test docker uv docker-up docker-down docker-logs
+import os
+from pathlib import Path
+from datetime import timedelta
 
-# Django 마이그레이션
-migrate:
-	python manage.py migrate
+# BASE DIR
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Django 개발 서버 실행 (ASGI)
-uv:
-	uvicorn config.asgi:application --reload
+# SECRET KEY
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-secret-key")
 
-# 코드 스타일/문법 검사 (ruff)
-ruff:
-	ruff check .
+# DEBUG
+DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-# 테스트 실행
-test:
-	pytest
+# ALLOWED HOSTS
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
-# Docker 이미지 빌드 후 컨테이너 실행
-docker-up:
-	docker-compose up --build -d
+# INSTALLED APPS
+INSTALLED_APPS = [
+    # 기본 Django 앱
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
 
-# Docker 컨테이너 정지
-docker-down:
-	docker-compose down
+    # Third-party 앱
+    'rest_framework',        # DRF
+    'drf_yasg',              # Swagger
+    'corsheaders',           # CORS 허용
 
-# Docker 컨테이너 로그 확인
-docker-logs:
-	docker-compose logs -f
+    # 로컬 앱
+    'accounts',
+]
+
+# MIDDLEWARE
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# URL & WSGI/ASGI
+ROOT_URLCONF = 'config.urls'
+WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
+
+# DATABASE
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',  # PostgreSQL
+        'NAME': os.environ.get("POSTGRES_DB", "financial_db"),
+        'USER': os.environ.get("POSTGRES_USER", "financial_user"),
+        'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "password"),
+        'HOST': os.environ.get("POSTGRES_HOST", "localhost"),
+        'PORT': os.environ.get("POSTGRES_PORT", "5432"),
+    }
+}
+
+# PASSWORD VALIDATORS
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# LANGUAGE & TIMEZONE
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'Asia/Seoul'
+USE_I18N = True
+USE_TZ = True
+
+# STATIC & MEDIA
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# DRF 기본 설정
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+}
+
+# Swagger 보안 및 접속 설정
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
+}
+
+# CORS 설정 (모든 도메인 허용, 필요 시 수정)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# 로깅 (Docker 환경 고려)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+    },
+    'root': {'handlers': ['console'], 'level': 'INFO'},
+}
