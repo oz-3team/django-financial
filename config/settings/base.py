@@ -37,14 +37,13 @@ INSTALLED_APPS = [
     # Third-party 앱
     'rest_framework',
     'drf_yasg',                    # Swagger
-    'corsheaders',
     'rest_framework_simplejwt',
 
     # 로컬 앱
     'apps.users.apps.UsersConfig',
+    'apps.accounts.apps.AccountsConfig',
     'apps.notification.apps.NotificationConfig',
     'apps.analysis.apps.AnalysisConfig',
-    'apps.accounts.apps.AccountsConfig',
     'apps.core.apps.CoreConfig',
 ]
 
@@ -52,7 +51,6 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 # ------------------------------
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

@@ -191,7 +191,6 @@ class APISmokeTests(TestCase):
     def setUpTestData(cls):
         cls.User = get_user_model()
         cls.user = cls.User.objects.create_user(
-            username="apiuser",
             email="apiuser@example.com",
             password="pass1234!",
         )

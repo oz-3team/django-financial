@@ -142,7 +142,6 @@ class NotificationCRUDTests(TestCase):
     def setUpTestData(cls):
         cls.User = get_user_model()
         cls.user = cls.User.objects.create_user(
-            username="notify_user",
             email="notify@example.com",
             password="pass1234!",
             is_active=True,
@@ -232,7 +231,6 @@ class NotificationAdminSmokeTests(TestCase):
     def setUpTestData(cls):
         cls.User = get_user_model()
         cls.admin_user = cls.User.objects.create_superuser(
-            username="admin",
             email="admin@example.com",
             password="pass1234!",
         )
