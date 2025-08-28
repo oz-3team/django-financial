@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings  # 커스텀 유저 모델 참조
 
+
 class Analysis(models.Model):
     PERIOD_CHOICES = [
         ('DAILY', '일간'),
@@ -8,6 +9,7 @@ class Analysis(models.Model):
         ('MONTHLY', '월간'),
         ('YEARLY', '연간'),
     ]
+
     ANALYSIS_TARGET_CHOICES = [
         ('INCOME', '수입'),
         ('EXPENSE', '지출'),
@@ -20,12 +22,21 @@ class Analysis(models.Model):
     )
     analysis_target = models.CharField(max_length=10, choices=ANALYSIS_TARGET_CHOICES)
     period_type = models.CharField(max_length=10, choices=PERIOD_CHOICES)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField(db_index=True)
+    end_date = models.DateField(db_index=True)
     description = models.TextField(blank=True, null=True)
     result_image = models.ImageField(upload_to='analysis_results/', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'analysis_target', 'period_type', 'start_date', 'end_date'],
+                name='unique_analysis'
+            )
+        ]
+        ordering = ['-created_at']
+
     def __str__(self):
-        return f"{self.user.email} - {self.analysis_target} ({self.period_type})"
+        return f"{self.user} - {self.get_analysis_target_display()} ({self.get_period_type_display()})"
