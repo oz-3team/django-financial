@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 # 1️⃣ 커스텀 User 매니저
-class UserManager(BaseUserManager):
+class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         """
         일반 사용자 생성
@@ -33,14 +33,18 @@ class UserManager(BaseUserManager):
 
 
 # 2️⃣ 커스텀 User 모델
-class User(AbstractBaseUser, PermissionsMixin):
+class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, max_length=255)
-    username = models.CharField(max_length=150, blank=True)
+    password = models.CharField(max_length=128)
+    nickname = models.CharField(max_length=50, blank=True)
+    name = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    last_login = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=False)  # 계정 활성화 여부
     is_staff = models.BooleanField(default=False)   # 관리자 권한
-    date_joined = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
 
-    objects = UserManager()
+    objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []  # email 외 필수 필드
