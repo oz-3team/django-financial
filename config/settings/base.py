@@ -1,5 +1,10 @@
 import os
 from pathlib import Path
+from datetime import timedelta
+from dotenv import load_dotenv
+
+# Load .env if exists
+load_dotenv()
 
 # BASE DIR
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -24,12 +29,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party 앱
-    'rest_framework',        # DRF
-    'drf_yasg',              # Swagger
-    'corsheaders',           # CORS 허용
+    'rest_framework',
+    'drf_yasg',                    # Swagger
+    'corsheaders',
+    'rest_framework_simplejwt',
 
     # 로컬 앱
-    'accounts',
+    'apps.users.apps.UsersConfig',
+    'apps.notification.apps.NotificationConfig',
+    'apps.analysis.apps.AnalysisConfig',
+    'apps.accounts.apps.AccountsConfig',
+    'apps.core.apps.CoreConfig',
 ]
 
 # MIDDLEWARE
@@ -49,10 +59,24 @@ ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
+# JWT 설정
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_COOKIE_ACCESS': 'access_token',
+    'AUTH_COOKIE_REFRESH': 'refresh_token',
+    'AUTH_COOKIE_SECURE': False,
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_SAMESITE': 'Lax',
+    'AUTH_COOKIE_REFRESH_PATH': '/users/token/refresh/',
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
 # DATABASE
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # PostgreSQL
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("POSTGRES_DB", "financial_db"),
         'USER': os.environ.get("POSTGRES_USER", "financial_user"),
         'PASSWORD': os.environ.get("POSTGRES_PASSWORD", "password"),
@@ -88,6 +112,16 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'apps.users.authentication.JWTCookieAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+        'rest_framework.filters.SearchFilter',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
 }
 
 # Swagger 보안 및 접속 설정
@@ -102,15 +136,16 @@ SWAGGER_SETTINGS = {
     }
 }
 
-# CORS 설정 (모든 도메인 허용, 필요 시 수정)
+# CORS 설정
 CORS_ALLOW_ALL_ORIGINS = True
 
-# 로깅 (Docker 환경 고려)
+# 로깅
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'console': {'class': 'logging.StreamHandler'},
-    },
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
     'root': {'handlers': ['console'], 'level': 'INFO'},
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'users.CustomUser'
