@@ -4,7 +4,7 @@ from __future__ import annotations
 import importlib
 import inspect
 from decimal import Decimal
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional
 
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.test import TestCase
