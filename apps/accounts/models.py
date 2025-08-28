@@ -17,7 +17,7 @@ class Account(models.Model):
         on_delete=models.PROTECT,
         related_name="accounts",
     )
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)  # 은행 이름/계좌명
     number = models.CharField(max_length=32, unique=True)  # 계좌번호/식별자
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="KRW")
     balance = models.DecimalField(max_digits=20, decimal_places=2, default=Decimal("0.00"))
