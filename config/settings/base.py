@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     # Third-party 앱
     'rest_framework',
     'drf_yasg',                    # Swagger
-    'corsheaders',
     'rest_framework_simplejwt',
 
     # 로컬 앱
@@ -52,7 +51,6 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 # ------------------------------
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
