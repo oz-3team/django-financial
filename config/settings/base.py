@@ -3,9 +3,11 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
+
 # ------------------------------
 # Load .env if exists
 # ------------------------------
+
 load_dotenv()
 
 # ------------------------------
