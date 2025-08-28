@@ -4,6 +4,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple, Type
 from uuid import uuid4
+from datetime import date
 import importlib
 import inspect
 
@@ -142,7 +143,6 @@ class AnalysisCRUDTests(TestCase):
     def setUpTestData(cls):
         cls.User = get_user_model()
         cls.user = cls.User.objects.create_user(
-            username="analysis_tester",
             email="analysis@test.com",
             password="pass1234!",
             is_active=True,
@@ -155,8 +155,21 @@ class AnalysisCRUDTests(TestCase):
         cls.analysis = cls.builder.create(cls.AnalysisModel)
 
     def test_create(self):
-        obj = self.builder.create(self.AnalysisModel)
-        self.assertIsNotNone(obj.pk)
+        # 고유한 데이터를 가진 새로운 Analysis 객체를 직접 생성.
+        # -> 빌더의 제약 사항을 우회하고 IntegrityError 회피 가능
+        new_analysis_obj = self.AnalysisModel.objects.create(
+            user=self.user,
+            analysis_target="EXPENSE",
+            period_type="DAILY",
+            start_date=date(2025, 8, 27),
+            end_date=date(2025, 8, 27),
+        )
+
+        # 객체가 성공적으로 생성되었는지 확인
+        self.assertIsNotNone(new_analysis_obj.pk)
+
+        # 추가적인 데이터 확인
+        self.assertEqual(new_analysis_obj.analysis_target, "EXPENSE")
 
     def test_read(self):
         obj = self.AnalysisModel.objects.get(pk=self.analysis.pk)
@@ -226,7 +239,6 @@ class AnalysisAdminSmokeTests(TestCase):
     def setUpTestData(cls):
         cls.User = get_user_model()
         cls.admin_user = cls.User.objects.create_superuser(
-            username="admin",
             email="admin@example.com",
             password="pass1234!",
         )

@@ -144,10 +144,8 @@ class AccountAndTransactionCRUDTests(TestCase):
     def setUpTestData(cls):
         cls.User = get_user_model()
         cls.user = cls.User.objects.create_user(
-            username="tester",
             email="tester@example.com",
             password="pass1234!",
-            is_active=True,
         )
 
         cls.AccountModel = _get_model(("accounts", "Account"), ("accounts", "Accounts"))
