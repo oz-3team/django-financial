@@ -10,31 +10,18 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("analysis", "0001_initial"),
+        ("notification", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="analysis",
+            model_name="notification",
             name="user",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="analyses",
+                related_name="notifications",
                 to=settings.AUTH_USER_MODEL,
-            ),
-        ),
-        migrations.AddConstraint(
-            model_name="analysis",
-            constraint=models.UniqueConstraint(
-                fields=(
-                    "user",
-                    "analysis_target",
-                    "period_type",
-                    "start_date",
-                    "end_date",
-                ),
-                name="unique_analysis",
             ),
         ),
     ]
