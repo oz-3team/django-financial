@@ -12,12 +12,9 @@ class AnalysisService:
         qs = TransactionHistory.objects.filter(
             account__in=user_accounts,
             occurred_at__date__range=[analysis.start_date, analysis.end_date],
-        )
-        if analysis.analysis_target == "INCOME":
-            return qs.filter(tx_type__in=["DEPOSIT", "TRANSFER_IN"])
-        elif analysis.analysis_target == "EXPENSE":
-            return qs.filter(tx_type__in=["WITHDRAW", "TRANSFER_OUT", "FEE"])
-        return qs
+        ).select_related("account")  # 1:1 관계 N+1 문제 해결
+
+        return qs  # ⚡ 반환 추가
 
     @staticmethod
     def get_analysis_data(analysis):

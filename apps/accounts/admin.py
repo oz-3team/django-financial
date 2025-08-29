@@ -2,6 +2,11 @@ from django.contrib import admin
 from .models import Account, TransactionHistory
 
 
+
+# ----------------------------
+# Account Admin
+# ----------------------------
+
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
     list_display = (
@@ -23,16 +28,16 @@ class AccountAdmin(admin.ModelAdmin):
 
     get_owner_email.short_description = "Owner Email"
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("owner")
 
+
+# ----------------------------
+# TransactionHistory Admin
+# ----------------------------
 @admin.register(TransactionHistory)
 class TransactionHistoryAdmin(admin.ModelAdmin):
-    """
-    TransactionHistory 관리자 화면 설정
-    - list_display: 주요 컬럼 표시
-    - list_filter: 필터링 가능, FK 필드 포함
-    - search_fields: FK 참조 필드 검색 가능
-    - ordering: 기본 정렬
-    """
 
     list_display = (
         "id",
@@ -42,7 +47,9 @@ class TransactionHistoryAdmin(admin.ModelAdmin):
         "currency",
         "occurred_at",
         "posted_at",
-        "counterparty",  # 상대 계좌도 표시
+
+        "counterparty",
+
     )
     list_filter = (
         "tx_type",
@@ -51,9 +58,14 @@ class TransactionHistoryAdmin(admin.ModelAdmin):
         "currency",
     )
     search_fields = (
-        "account__number",  # FK 참조
-        "counterparty__number",  # 상대 계좌 검색 가능
+
+        "account__number",
+        "counterparty__number",
         "description",
         "external_ref",
     )
     ordering = ("-occurred_at",)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("account", "counterparty")
