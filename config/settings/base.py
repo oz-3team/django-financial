@@ -209,8 +209,15 @@ LOGGING = {
 # 기타
 # ------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+<<<<<<< HEAD
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # 실제 SMTP 서버 세팅없이 이메일 발송 기능 테스트.
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # 기본 인증 백엔드. 사용자 인증 동작용. 이 설정이 없으면, 커스텀 유저 모델 사용 시 인증과 관련하여 예상치 못한 동작이 발생 가능
 )
+=======
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # 실제 SMTP 서버 세팅없이 이메일 발송 기능 테스트.
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",  # 기본 인증 백엔드. 사용자 인증 동작용. 이 설정이 없으면, 커스텀 유저 모델 사용 시 인증과 관련하여 예상치 못한 동작이 발생 가능
+)
+>>>>>>> 4c64ea2 (🐛User 토큰, 이메일 인증 수정)
