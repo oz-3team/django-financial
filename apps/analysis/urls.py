@@ -3,11 +3,11 @@ from rest_framework.routers import DefaultRouter
 from .views import AnalysisViewSet, TransactionHistoryViewSet
 
 router = DefaultRouter()
-router.register(r'analysis', AnalysisViewSet, basename='analysis')
-router.register(r'transactions', TransactionHistoryViewSet, basename='transaction')
+router.register(r"analysis", AnalysisViewSet, basename="analysis")
+router.register(r"transactions", TransactionHistoryViewSet, basename="transaction")
 
 urlpatterns = [
-    path('', include(router.urls)),  # /api/analysis/ + /api/transactions/ 자동 매핑
+    path("", include(router.urls)),  # /api/analysis/ + /api/transactions/ 자동 매핑
 ]
 
 # 트랜잭션은 Viewset이기 때문에 라우터 설정 한 줄로 엔드포인트 생성에 RESTful URL 구조까지 유지가능

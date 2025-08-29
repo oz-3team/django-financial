@@ -8,16 +8,28 @@ from .models import Account, TransactionHistory as TH
 
 TWO_DP = Decimal("0.01")
 
+
 def _q(amount: Decimal) -> Decimal:
     # 소수점 2자리 반올림 고정
     return (Decimal(amount)).quantize(TWO_DP, rounding=ROUND_HALF_UP)
 
+
 def _ensure_currency(account: Account, currency: str):
     if account.currency != currency:
-        raise ValueError(f"Currency mismatch: account={account.currency}, tx={currency}")
+        raise ValueError(
+            f"Currency mismatch: account={account.currency}, tx={currency}"
+        )
+
 
 @transaction.atomic
-def deposit(account_id, amount, currency="KRW", description="", idempotency_key=None, metadata=None):
+def deposit(
+    account_id,
+    amount,
+    currency="KRW",
+    description="",
+    idempotency_key=None,
+    metadata=None,
+):
     amount = _q(amount)
     if amount <= 0:
         raise ValueError("amount must be > 0")
@@ -27,7 +39,9 @@ def deposit(account_id, amount, currency="KRW", description="", idempotency_key=
 
     # 멱등성: 동일 키가 이미 존재하면 그대로 반환
     if idempotency_key:
-        existing = TH.objects.filter(account=acc, idempotency_key=idempotency_key).first()
+        existing = TH.objects.filter(
+            account=acc, idempotency_key=idempotency_key
+        ).first()
         if existing:
             return existing
 
@@ -46,12 +60,21 @@ def deposit(account_id, amount, currency="KRW", description="", idempotency_key=
     )
 
     # 잔액/버전 갱신
-    Account.objects.filter(pk=acc.pk).update(balance=new_balance, version=F("version") + 1)
+    Account.objects.filter(pk=acc.pk).update(
+        balance=new_balance, version=F("version") + 1
+    )
     return tx
 
 
 @transaction.atomic
-def withdraw(account_id, amount, currency="KRW", description="", idempotency_key=None, metadata=None):
+def withdraw(
+    account_id,
+    amount,
+    currency="KRW",
+    description="",
+    idempotency_key=None,
+    metadata=None,
+):
     amount = _q(amount)
     if amount <= 0:
         raise ValueError("amount must be > 0")
@@ -60,7 +83,9 @@ def withdraw(account_id, amount, currency="KRW", description="", idempotency_key
     _ensure_currency(acc, currency)
 
     if idempotency_key:
-        existing = TH.objects.filter(account=acc, idempotency_key=idempotency_key).first()
+        existing = TH.objects.filter(
+            account=acc, idempotency_key=idempotency_key
+        ).first()
         if existing:
             return existing
 
@@ -84,7 +109,9 @@ def withdraw(account_id, amount, currency="KRW", description="", idempotency_key
         metadata=metadata or {},
     )
 
-    Account.objects.filter(pk=acc.pk).update(balance=new_balance, version=F("version") + 1)
+    Account.objects.filter(pk=acc.pk).update(
+        balance=new_balance, version=F("version") + 1
+    )
     return tx
 
 
@@ -99,7 +126,9 @@ def transfer(from_account_id, to_account_id, amount, currency="KRW", description
 
     # 교착 방지: id 순서로 잠금
     a_id, b_id = sorted([from_account_id, to_account_id])
-    a, b = Account.objects.select_for_update().filter(pk__in=[a_id, b_id]).order_by("pk")
+    a, b = (
+        Account.objects.select_for_update().filter(pk__in=[a_id, b_id]).order_by("pk")
+    )
     from_acc = a if a.pk == from_account_id else b
     to_acc = b if a.pk == from_account_id else a
 
@@ -145,7 +174,11 @@ def transfer(from_account_id, to_account_id, amount, currency="KRW", description
     )
 
     # 두 계좌 잔액/버전 갱신
-    Account.objects.filter(pk=from_acc.pk).update(balance=from_new_bal, version=F("version") + 1)
-    Account.objects.filter(pk=to_acc.pk).update(balance=to_new_bal, version=F("version") + 1)
+    Account.objects.filter(pk=from_acc.pk).update(
+        balance=from_new_bal, version=F("version") + 1
+    )
+    Account.objects.filter(pk=to_acc.pk).update(
+        balance=to_new_bal, version=F("version") + 1
+    )
 
     return out_tx, in_tx

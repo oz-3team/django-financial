@@ -3,6 +3,7 @@ from apps.accounts.models import TransactionHistory, Account
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
 
+
 class AnalysisService:
     @staticmethod
     def get_transaction_queryset(analysis):
@@ -10,7 +11,7 @@ class AnalysisService:
         user_accounts = Account.objects.filter(user=analysis.user)
         qs = TransactionHistory.objects.filter(
             account__in=user_accounts,
-            occurred_at__date__range=[analysis.start_date, analysis.end_date]
+            occurred_at__date__range=[analysis.start_date, analysis.end_date],
         )
         if analysis.analysis_target == "INCOME":
             return qs.filter(tx_type__in=["DEPOSIT", "TRANSFER_IN"])
@@ -26,18 +27,18 @@ class AnalysisService:
         transaction_count = qs.count()
 
         trunc_func = {
-            'DAILY': TruncDay,
-            'WEEKLY': TruncWeek,
-            'MONTHLY': TruncMonth,
-            'YEARLY': TruncYear,
+            "DAILY": TruncDay,
+            "WEEKLY": TruncWeek,
+            "MONTHLY": TruncMonth,
+            "YEARLY": TruncYear,
         }[analysis.period_type]
 
-        period_data = qs.annotate(
-            period=trunc_func("occurred_at")
-        ).values("period").annotate(
-            total_amount=Sum("amount"),
-            transaction_count=Count("id")
-        ).order_by("period")
+        period_data = (
+            qs.annotate(period=trunc_func("occurred_at"))
+            .values("period")
+            .annotate(total_amount=Sum("amount"), transaction_count=Count("id"))
+            .order_by("period")
+        )
 
         return {
             "total_amount": total_amount,

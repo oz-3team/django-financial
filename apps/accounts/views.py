@@ -12,6 +12,7 @@ class AccountViewSet(viewsets.ModelViewSet):
     - GET /api/accounts/<id>/   : 특정 계좌 조회
     - DELETE /api/accounts/<id>/: 계좌 삭제
     """
+
     serializer_class = AccountSerializer
     permission_classes = [IsAuthenticated]
 

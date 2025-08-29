@@ -29,7 +29,9 @@ class _ModelBuilder:
         self.context = context or {}
         self.context.setdefault(type(user), user)
 
-    def create(self, model: type[models.Model], extra: Optional[Dict[str, Any]] = None) -> models.Model:
+    def create(
+        self, model: type[models.Model], extra: Optional[Dict[str, Any]] = None
+    ) -> models.Model:
         data: Dict[str, Any] = {}
         extra = extra or {}
 
@@ -43,7 +45,9 @@ class _ModelBuilder:
                 continue
             if isinstance(field, models.ManyToManyField):
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
 
             if field.name in extra:
@@ -87,11 +91,20 @@ class _ModelBuilder:
                 continue
             if field.auto_created or field.primary_key:
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
-            if field.null or getattr(field, "blank", False) or (field.default is not models.NOT_PROVIDED):
+            if (
+                field.null
+                or getattr(field, "blank", False)
+                or (field.default is not models.NOT_PROVIDED)
+            ):
                 continue
-            if isinstance(field, models.ForeignKey) and field.remote_field.model == get_user_model():
+            if (
+                isinstance(field, models.ForeignKey)
+                and field.remote_field.model == get_user_model()
+            ):
                 data[field.name] = self.user
                 continue
             if field.choices:
@@ -111,16 +124,30 @@ class _ModelBuilder:
     def _default_for(field: models.Field) -> Any:
         if isinstance(field, (models.CharField, models.SlugField)):
             base = f"f{timezone.now().timestamp()}"
-            return base[: field.max_length] if getattr(field, "max_length", None) else base
+            return (
+                base[: field.max_length] if getattr(field, "max_length", None) else base
+            )
         if isinstance(field, models.TextField):
             return f"{field.name} text"
-        if isinstance(field, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField,
-                              models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+        if isinstance(
+            field,
+            (
+                models.IntegerField,
+                models.SmallIntegerField,
+                models.BigIntegerField,
+                models.PositiveIntegerField,
+                models.PositiveSmallIntegerField,
+            ),
+        ):
             return 1
         if isinstance(field, models.FloatField):
             return 1.0
         if isinstance(field, models.DecimalField):
-            return Decimal("1").scaleb(-field.decimal_places) if field.decimal_places > 0 else Decimal("1")
+            return (
+                Decimal("1").scaleb(-field.decimal_places)
+                if field.decimal_places > 0
+                else Decimal("1")
+            )
         if isinstance(field, models.BooleanField):
             return True
         if isinstance(field, models.DateTimeField):
@@ -140,10 +167,9 @@ class AdminViewsSmokeTests(TestCase):
             password="pass1234!",
         )
         cls.AccountModel = _get_model("accounts", "Account", "Accounts")
-        cls.TransactionModel = (
-            _get_model("accounts", "Transaction", "Transactions", "TransactionHistory")
-            or _get_model("transactions", "Transaction", "Transactions")
-        )
+        cls.TransactionModel = _get_model(
+            "accounts", "Transaction", "Transactions", "TransactionHistory"
+        ) or _get_model("transactions", "Transaction", "Transactions")
 
         cls.builder = _ModelBuilder(user=cls.superuser)
 

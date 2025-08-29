@@ -22,13 +22,20 @@ def _get_model(*candidates: Tuple[str, str]):
 
 
 class _ModelBuilder:
-    def __init__(self, user, account_model=None, context: Optional[Dict[Type[models.Model], models.Model]] = None):
+    def __init__(
+        self,
+        user,
+        account_model=None,
+        context: Optional[Dict[Type[models.Model], models.Model]] = None,
+    ):
         self.user = user
         self.account_model = account_model
         self.context = context or {}
         self.context.setdefault(type(user), user)
 
-    def create(self, model: Type[models.Model], extra: Optional[Dict[str, Any]] = None) -> models.Model:
+    def create(
+        self, model: Type[models.Model], extra: Optional[Dict[str, Any]] = None
+    ) -> models.Model:
         data: Dict[str, Any] = {}
         extra = extra or {}
 
@@ -40,11 +47,16 @@ class _ModelBuilder:
                 continue
             if field.auto_created:
                 continue
-            if isinstance(field, (models.AutoField, models.BigAutoField)) or field.primary_key:
+            if (
+                isinstance(field, (models.AutoField, models.BigAutoField))
+                or field.primary_key
+            ):
                 continue
             if isinstance(field, models.ManyToManyField):
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
 
             if field.name in extra:
@@ -52,18 +64,24 @@ class _ModelBuilder:
                 continue
 
             has_default = field.default is not models.NOT_PROVIDED
-            if (field.null or getattr(field, "blank", False) or has_default):
+            if field.null or getattr(field, "blank", False) or has_default:
                 continue
 
             if isinstance(field, models.ForeignKey):
                 rel_model = field.remote_field.model  # type: ignore
-                if rel_model in self.context and isinstance(self.context[rel_model], rel_model):
+                if rel_model in self.context and isinstance(
+                    self.context[rel_model], rel_model
+                ):
                     data[field.name] = self.context[rel_model]
                     continue
                 if rel_model == get_user_model():
                     data[field.name] = self.user
                     continue
-                if self.account_model and rel_model == self.account_model and self.account_model in self.context:
+                if (
+                    self.account_model
+                    and rel_model == self.account_model
+                    and self.account_model in self.context
+                ):
                     data[field.name] = self.context[self.account_model]
                     continue
                 data[field.name] = self._create_minimal_related(rel_model)
@@ -89,11 +107,21 @@ class _ModelBuilder:
         for field in rel_model._meta.get_fields():
             if not isinstance(field, models.Field):
                 continue
-            if field.auto_created or isinstance(field, (models.AutoField, models.BigAutoField)) or field.primary_key:
+            if (
+                field.auto_created
+                or isinstance(field, (models.AutoField, models.BigAutoField))
+                or field.primary_key
+            ):
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
-            if field.null or getattr(field, "blank", False) or (field.default is not models.NOT_PROVIDED):
+            if (
+                field.null
+                or getattr(field, "blank", False)
+                or (field.default is not models.NOT_PROVIDED)
+            ):
                 continue
             if isinstance(field, models.ForeignKey):
                 if field.remote_field.model == get_user_model():
@@ -116,10 +144,21 @@ class _ModelBuilder:
     def _default_for(field: models.Field) -> Any:
         if isinstance(field, (models.CharField, models.SlugField)):
             base = f"u{uuid4().hex}"
-            return base[: field.max_length] if getattr(field, "max_length", None) else base
+            return (
+                base[: field.max_length] if getattr(field, "max_length", None) else base
+            )
         if isinstance(field, models.TextField):
             return f"{field.name} text"
-        if isinstance(field, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+        if isinstance(
+            field,
+            (
+                models.IntegerField,
+                models.SmallIntegerField,
+                models.BigIntegerField,
+                models.PositiveIntegerField,
+                models.PositiveSmallIntegerField,
+            ),
+        ):
             return 1
         if isinstance(field, models.FloatField):
             return 1.0
@@ -163,7 +202,9 @@ class AccountAndTransactionCRUDTests(TestCase):
             raise AssertionError("Transaction/Transactions 모델을 찾지 못했습니다.")
 
         cls.builder = _ModelBuilder(user=cls.user, account_model=cls.AccountModel)
-        cls.account = cls.builder.create(cls.AccountModel, extra={"owner": cls.user})  # ← owner 채움
+        cls.account = cls.builder.create(
+            cls.AccountModel, extra={"owner": cls.user}
+        )  # ← owner 채움
         cls.builder.context[cls.AccountModel] = cls.account
 
     def test_accounts_create(self):
@@ -227,7 +268,9 @@ class AccountAndTransactionCRUDTests(TestCase):
                 continue
             if isinstance(field, models.ForeignKey):
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
             if isinstance(field, (models.DateTimeField, models.DateField)):
                 continue
@@ -238,17 +281,38 @@ class AccountAndTransactionCRUDTests(TestCase):
                 continue
 
             try:
-                if isinstance(field, (models.CharField, models.SlugField, models.TextField)):
+                if isinstance(
+                    field, (models.CharField, models.SlugField, models.TextField)
+                ):
                     base = f"u{uuid4().hex}"
-                    setattr(obj, field.name, base[: field.max_length] if getattr(field, "max_length", None) else base)
+                    setattr(
+                        obj,
+                        field.name,
+                        base[: field.max_length]
+                        if getattr(field, "max_length", None)
+                        else base,
+                    )
                     changed = True
                     break
-                if isinstance(field, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField, models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+                if isinstance(
+                    field,
+                    (
+                        models.IntegerField,
+                        models.SmallIntegerField,
+                        models.BigIntegerField,
+                        models.PositiveIntegerField,
+                        models.PositiveSmallIntegerField,
+                    ),
+                ):
                     setattr(obj, field.name, (current or 0) + 1)
                     changed = True
                     break
                 if isinstance(field, models.DecimalField):
-                    inc = Decimal("1").scaleb(-field.decimal_places) if field.decimal_places > 0 else Decimal("1")
+                    inc = (
+                        Decimal("1").scaleb(-field.decimal_places)
+                        if field.decimal_places > 0
+                        else Decimal("1")
+                    )
                     setattr(obj, field.name, (current or Decimal("0")) + inc)
                     changed = True
                     break
