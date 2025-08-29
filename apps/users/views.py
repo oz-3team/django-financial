@@ -1,96 +1,122 @@
-from rest_framework.views import APIView
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from apps.users.serializers import (
-    UserSignupSerializer,
-    CustomTokenObtainPairSerializer,
-    UserProfileSerializer,
-    UserUpdateSerializer,
-)
-from apps.users.services import UserService
-from rest_framework_simplejwt.views import TokenRefreshView
-from django.conf import settings
-from apps.users.jwt import set_token_cookies
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.urls import reverse
+from django.core.mail import send_mail
+
+from drf_yasg.utils import swagger_auto_schema
+
+from .models import CustomUser
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .tokens import account_activation_token
 
 
-class UserSignupView(APIView):
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
-    def post(self, request):
-        serializer = UserSignupSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                user = UserService.create_user(**serializer.validated_data)
-                return Response(
-                    UserSignupSerializer(user).data, status=status.HTTP_201_CREATED
-                )
-            except ValueError as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CustomTokenObtainPairView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = CustomTokenObtainPairSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.user
-            refresh = serializer.get_token(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
-
-            response = Response(
-                {"message": "Login successful"}, status=status.HTTP_200_OK
-            )
-            set_token_cookies(response, access_token, refresh_token)
-            return response
-
-        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
-
-
-class CustomTokenRefreshView(TokenRefreshView):
+    @swagger_auto_schema(request_body=RegisterSerializer)
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
-        if not refresh_token:
-            return Response(
-                {"error": "Refresh token not found in cookies"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+        return super().post(request, *args, **kwargs)
 
-        serializer = self.get_serializer(data={"refresh": refresh_token})
+    def perform_create(self, serializer):
+        user = serializer.save(is_active=False)  # 이메일 인증 전 비활성화
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = account_activation_token.make_token(user)
+        activation_link = self.request.build_absolute_uri(
+            reverse("verify_email", kwargs={"uidb64": uid, "token": token})
+        )
+        send_mail(
+            subject="이메일 인증을 완료해주세요.",
+            message=f"다음 링크를 클릭하면 계정이 활성화됩니다:\n{activation_link}",
+            from_email="no-reply@yourapp.com",
+            recipient_list=[user.email],
+        )
+
+
+class VerifyEmailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, uidb64, token):
         try:
-            serializer.is_valid(raise_exception=True)
-        except Exception:
-            return Response(
-                {"error": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED
-            )
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user = None
+        if user and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.save()
+            return Response({"msg": "Email verified successfully"}, status=200)
+        else:
+            return Response({"error": "Invalid or expired token"}, status=400)
 
-        access_token = serializer.validated_data["access"]
-        response = Response({"message": "Token refreshed"}, status=status.HTTP_200_OK)
-        set_token_cookies(response, access_token=access_token)
+
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(request_body=LoginSerializer)
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+
+        refresh = RefreshToken.for_user(user)
+
+        response = Response(
+            {
+                "msg": "Login success",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
+            status=status.HTTP_200_OK,
+        )
+        response.set_cookie("access", str(refresh.access_token), httponly=True)
+        response.set_cookie("refresh", str(refresh), httponly=True)
         return response
 
 
-class UserProfileView(APIView):
+class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            return Response({"error": "Invalid token"}, status=400)
+        response = Response({"msg": "Logout success"}, status=200)
+        response.delete_cookie("access")
+        response.delete_cookie("refresh")
+        return response
+
+
+class UserMeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(responses={200: UserSerializer})
     def get(self, request):
-        serializer = UserProfileSerializer(request.user)
+        serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+    @swagger_auto_schema(request_body=UserSerializer, responses={200: UserSerializer})
     def put(self, request):
-        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            user = UserService.update_user(request.user, serializer.validated_data)
-            return Response(UserProfileSerializer(user).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserSerializer(request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
+    @swagger_auto_schema(request_body=UserSerializer, responses={200: UserSerializer})
+    def patch(self, request):
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @swagger_auto_schema(responses={200: "Deleted successfully"})
     def delete(self, request):
-        UserService.delete_user(request.user)
-        response = Response(
-            {"message": "Deleted successfully"}, status=status.HTTP_200_OK
-        )
-        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_ACCESS"])
-        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
-        return response
+        request.user.delete()
+        return Response({"msg": "Deleted successfully"}, status=200)
