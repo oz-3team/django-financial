@@ -23,6 +23,8 @@ urlpatterns = [
     path("api/users/", include("apps.users.urls")),
     path("api/notifications/", include("apps.notification.urls")),
     path("api/analysis/", include("apps.analysis.urls")),
+    # Django REST framework 로그인/로그아웃 (브라우저에서 버튼 보이게 해줌)
+    path("api-auth/", include("rest_framework.urls")),
     # Swagger UI
     path(
         "swagger/",
