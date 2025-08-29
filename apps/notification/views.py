@@ -18,6 +18,7 @@ class UnreadNotificationList(generics.ListAPIView):
         )
 
 
+
 class MarkNotificationRead(APIView):
     def post(self, request, pk):
         try:

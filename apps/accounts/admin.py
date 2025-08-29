@@ -2,9 +2,11 @@ from django.contrib import admin
 from .models import Account, TransactionHistory
 
 
+
 # ----------------------------
 # Account Admin
 # ----------------------------
+
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
     list_display = (
@@ -36,6 +38,7 @@ class AccountAdmin(admin.ModelAdmin):
 # ----------------------------
 @admin.register(TransactionHistory)
 class TransactionHistoryAdmin(admin.ModelAdmin):
+
     list_display = (
         "id",
         "account",
@@ -44,7 +47,9 @@ class TransactionHistoryAdmin(admin.ModelAdmin):
         "currency",
         "occurred_at",
         "posted_at",
+
         "counterparty",
+
     )
     list_filter = (
         "tx_type",
@@ -53,6 +58,7 @@ class TransactionHistoryAdmin(admin.ModelAdmin):
         "currency",
     )
     search_fields = (
+
         "account__number",
         "counterparty__number",
         "description",
