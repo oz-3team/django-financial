@@ -119,8 +119,4 @@ class UserMeView(APIView):
     @swagger_auto_schema(responses={200: "Deleted successfully"})
     def delete(self, request):
         request.user.delete()
-<<<<<<< HEAD
         return Response({"msg": "Deleted successfully"}, status=200)
-=======
-        return Response({"msg": "Deleted successfully"}, status=200)
->>>>>>> 4c64ea2 (🐛User 토큰, 이메일 인증 수정)
