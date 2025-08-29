@@ -27,4 +27,4 @@ class AccountViewSet(viewsets.ModelViewSet):
         """
         계좌 생성 시, 로그인한 사용자를 자동으로 연결
         """
-        serializer.save(user=self.request.user)
+        serializer.save(owner=self.request.user)

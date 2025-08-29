@@ -14,15 +14,15 @@ repos:
 
 
 # 수정 사항 있을 시, clean 하고 새로 인스톨한 다음 테스트.
-#pre-commit clean
-#pre-commit install
-#pre-commit run --all-files
+# pre-commit clean
+# pre-commit install
+# pre-commit run --all-files
 
 # 깃모지를 사용하기전에 러프를 실행시키기.
 
-#pre-commit run --all-files -> 러프굴려서 자동으로 맞추기
-#git add . -> add
-#gitmoji -c -> 깃모지 사용
+# pre-commit run --all-files -> 러프굴려서 자동으로 맞추기
+# git add . -> add
+# gitmoji -c -> 깃모지 사용
 
 # or
 
