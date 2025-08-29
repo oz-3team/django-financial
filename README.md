@@ -1,3 +1,12 @@
+# Django Financial Project
+
+## 프로젝트 개요
+- Django 기반 개인 금융 관리 서비스
+- 사용자 계좌, 거래 내역, 분석, 알림 등을 관리
+- Docker + Docker Compose 환경에서 실행 가능
+
+---
+
 ## 데이터베이스 ERD
 
 ```mermaid
@@ -55,6 +64,7 @@ erDiagram
     ACCOUNTS ||--o{ TRANSACTION_HISTORY : "거래 내역 보유"
     USERS ||--o{ ANALYSIS : "분석 요청"
     USERS ||--o{ NOTIFICATIONS : "알림 수신"
+
 ```
 
 ## 플로우 차트: 사용자 인증 흐름
