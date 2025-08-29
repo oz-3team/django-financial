@@ -1,177 +1,122 @@
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status, permissions, mixins
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
-from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.urls import reverse
+from django.core.mail import send_mail
+
 from drf_yasg.utils import swagger_auto_schema
-from .serializers import (
-    UserSignupSerializer,
-    UserProfileSerializer,
-    CustomTokenObtainPairSerializer,
-)
-from .services import UserService
-from .utils import set_token_cookies
-import logging
 
-User = get_user_model()
-logger = logging.getLogger(__name__)
+from .models import CustomUser
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .tokens import account_activation_token
 
 
-# ------------------------------
-# ✅ 커스텀 페이징 클래스
-# ------------------------------
-class UserListPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 50
-
-
-# ------------------------------
-# ✅ SUPERUSER 전용 유저 리스트
-# ------------------------------
-class UserListViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    superuser 또는 staff 전용 유저 목록 조회
-    """
-
-    queryset = User.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAdminUser]
-    pagination_class = UserListPagination
-    throttle_classes = [UserRateThrottle]
-
-
-# ------------------------------
-# ✅ 회원가입
-# ------------------------------
-class UserSignupViewSet(viewsets.GenericViewSet):
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
-    serializer_class = UserSignupSerializer
-    throttle_classes = [AnonRateThrottle]
 
-    @swagger_auto_schema(
-        request_body=UserSignupSerializer, responses={201: UserSignupSerializer}
-    )
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        try:
-            user = UserService.create_user(**serializer.validated_data)
-            UserService.send_verification_email(user)
-            logger.info(f"User {user.email} signed up successfully.")
-            return Response(
-                UserSignupSerializer(user).data, status=status.HTTP_201_CREATED
-            )
-        except Exception as e:
-            logger.error(f"Signup failed: {str(e)}")
-            return Response(
-                {"error": "회원가입에 실패했습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-
-# ------------------------------
-# ✅ JWT 로그인
-# ------------------------------
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
-    permission_classes = [permissions.AllowAny]
-    throttle_classes = [AnonRateThrottle]
-
-    @swagger_auto_schema(request_body=CustomTokenObtainPairSerializer)
+    @swagger_auto_schema(request_body=RegisterSerializer)
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        return super().post(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        user = serializer.save(is_active=False)  # 이메일 인증 전 비활성화
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = account_activation_token.make_token(user)
+        activation_link = self.request.build_absolute_uri(
+            reverse("verify_email", kwargs={"uidb64": uid, "token": token})
+        )
+        send_mail(
+            subject="이메일 인증을 완료해주세요.",
+            message=f"다음 링크를 클릭하면 계정이 활성화됩니다:\n{activation_link}",
+            from_email="no-reply@yourapp.com",
+            recipient_list=[user.email],
+        )
+
+
+class VerifyEmailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user = None
+        if user and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.save()
+            return Response({"msg": "Email verified successfully"}, status=200)
+        else:
+            return Response({"error": "Invalid or expired token"}, status=400)
+
+
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(request_body=LoginSerializer)
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.user
-        refresh = serializer.get_token(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
+        user = serializer.validated_data["user"]
+
+        refresh = RefreshToken.for_user(user)
+
         response = Response(
-            {"message": "로그인에 성공했습니다."}, status=status.HTTP_200_OK
+            {
+                "msg": "Login success",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
+            status=status.HTTP_200_OK,
         )
-        set_token_cookies(
-            response, access_token, refresh_token, secure=True, samesite="Strict"
-        )
-        logger.info(f"User {user.email} logged in successfully.")
+        response.set_cookie("access", str(refresh.access_token), httponly=True)
+        response.set_cookie("refresh", str(refresh), httponly=True)
         return response
 
 
-# ------------------------------
-# ✅ JWT 토큰 갱신
-# ------------------------------
-class CustomTokenRefreshView(TokenRefreshView):
-    throttle_classes = [UserRateThrottle]
-
-    @swagger_auto_schema(request_body=None)
-    def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
-        if not refresh_token:
-            logger.warning("Refresh token not found.")
-            return Response(
-                {"error": "리프레시 토큰이 없습니다."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-        serializer = self.get_serializer(data={"refresh": refresh_token})
-        try:
-            serializer.is_valid(raise_exception=True)
-            access_token = serializer.validated_data["access"]
-            response = Response(
-                {"message": "토큰이 갱신되었습니다."}, status=status.HTTP_200_OK
-            )
-            set_token_cookies(
-                response, access_token=access_token, secure=True, samesite="Strict"
-            )
-            logger.info("Token refreshed successfully.")
-            return response
-        except Exception as e:
-            logger.error(f"Token refresh failed: {str(e)}")
-            return Response(
-                {"error": "토큰 갱신에 실패했습니다."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-
-# ------------------------------
-# ✅ 프로필 조회/수정/삭제
-# ------------------------------
-class UserProfileViewSet(
-    viewsets.GenericViewSet,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
-):
+class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = UserProfileSerializer
-    throttle_classes = [UserRateThrottle]
 
-    def get_object(self):
-        return self.request.user
-
-    @swagger_auto_schema(
-        method="post",
-        request_body=UserProfileSerializer,
-        responses={200: "Password reset link sent"},
-    )
-    @action(detail=False, methods=["post"], permission_classes=[permissions.AllowAny])
-    def request_password_reset(self, request):
-        email = request.data.get("email")
-        if not email:
-            return Response(
-                {"error": "이메일을 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST
-            )
+    def post(self, request):
         try:
-            UserService.request_password_reset(email)
-            logger.info(f"Password reset requested for {email}.")
-            return Response(
-                {"message": "비밀번호 재설정 링크가 전송되었습니다."},
-                status=status.HTTP_200_OK,
-            )
-        except Exception as e:
-            logger.error(f"Password reset request failed: {str(e)}")
-            return Response(
-                {"error": "비밀번호 재설정 요청에 실패했습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            refresh_token = request.COOKIES.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            return Response({"error": "Invalid token"}, status=400)
+        response = Response({"msg": "Logout success"}, status=200)
+        response.delete_cookie("access")
+        response.delete_cookie("refresh")
+        return response
+
+
+class UserMeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(responses={200: UserSerializer})
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(request_body=UserSerializer, responses={200: UserSerializer})
+    def put(self, request):
+        serializer = UserSerializer(request.user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @swagger_auto_schema(request_body=UserSerializer, responses={200: UserSerializer})
+    def patch(self, request):
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @swagger_auto_schema(responses={200: "Deleted successfully"})
+    def delete(self, request):
+        request.user.delete()
+        return Response({"msg": "Deleted successfully"}, status=200)

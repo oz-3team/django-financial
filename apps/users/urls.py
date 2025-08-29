@@ -1,28 +1,20 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from .views import (
-    UserSignupViewSet,
-    UserProfileViewSet,
-    CustomTokenObtainPairView,
-    CustomTokenRefreshView,
-    UserListViewSet,
+    RegisterView,
+    VerifyEmailView,
+    LoginView,
+    LogoutView,
+    UserMeView,
 )
-
-router = DefaultRouter()
-# 회원가입
-router.register(r"signup", UserSignupViewSet, basename="signup")
-# 프로필
-router.register(r"profile", UserProfileViewSet, basename="profile")
-# 관리자용 사용자 목록 (basename 변경)
-router.register(r"users", UserListViewSet, basename="user-list")
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
-    path("auth/login/", CustomTokenObtainPairView.as_view(), name="login"),
-    path("auth/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"),
+    path("register/", RegisterView.as_view(), name="register"),
     path(
-        "auth/password-reset/",
-        UserProfileViewSet.as_view({"post": "request_password_reset"}),
-        name="password_reset",
+        "verify-email/<uidb64>/<token>/", VerifyEmailView.as_view(), name="verify_email"
     ),
-    path("", include(router.urls)),
+    path("login/", LoginView.as_view(), name="login"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    path("me/", UserMeView.as_view(), name="user_me"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]

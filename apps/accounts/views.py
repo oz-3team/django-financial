@@ -17,10 +17,11 @@ class AccountViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        로그인한 사용자 본인 계좌만 조회
-        """
-        return Account.objects.filter(user=self.request.user)
+        return (
+            Account.objects.filter(user=self.request.user)
+            .select_related("owner")
+            .prefetch_related("transactions", "counter_transactions")
+        )
 
     def perform_create(self, serializer):
         """

@@ -1,40 +1,51 @@
 from rest_framework import serializers
-from apps.users.models import CustomUser
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
+from .models import CustomUser
 
 
-class UserSignupSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ["id", "email", "password", "nickname", "name", "phone_number"]
-        read_only_fields = ["id"]
+        fields = ["email", "password", "nickname", "name", "phone_number"]
 
     def create(self, validated_data):
-        password = validated_data.pop("password")
-        user = CustomUser(**validated_data)
-        user.set_password(password)
-        user.save()
+        user = CustomUser.objects.create_user(
+            email=validated_data["email"],
+            password=validated_data["password"],
+            nickname=validated_data.get("nickname", ""),
+            name=validated_data.get("name", ""),
+            phone_number=validated_data.get("phone_number", ""),
+        )
         return user
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token["email"] = user.email
-        token["nickname"] = user.nickname
-        return token
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = authenticate(email=attrs.get("email"), password=attrs.get("password"))
+        if not user:
+            raise serializers.ValidationError("Invalid email or password")
+        if not user.is_active:
+            raise serializers.ValidationError("User account not active")
+        attrs["user"] = user
+        return attrs
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ["id", "email", "nickname", "name", "phone_number", "created_at"]
-
-
-class UserUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ["nickname", "name", "phone_number"]
+        fields = [
+            "id",
+            "email",
+            "nickname",
+            "name",
+            "phone_number",
+            "is_active",
+            "is_staff",
+            "created_at",
+        ]
+        read_only_fields = ["id", "is_active", "is_staff", "created_at"]
