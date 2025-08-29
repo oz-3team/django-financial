@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_yasg",  # Swagger
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     # 로컬 앱
     "apps.users.apps.UsersConfig",
     "apps.accounts.apps.AccountsConfig",
@@ -133,6 +134,9 @@ DATABASES = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
     "AUTH_COOKIE_ACCESS": "access_token",
     "AUTH_COOKIE_REFRESH": "refresh_token",
     "AUTH_COOKIE_SECURE": False,
@@ -141,6 +145,14 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_REFRESH_PATH": "/users/token/refresh/",
     "ALGORITHM": "HS256",
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
+    "JTI_CLAIM": "jti",
+    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
 # ------------------------------
@@ -152,8 +164,11 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "apps.users.authentication.JWTCookieAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -193,3 +208,8 @@ LOGGING = {
 # 기타
 # ------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # 실제 SMTP 서버 세팅없이 이메일 발송 기능 테스트.
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",  # 기본 인증 백엔드. 사용자 인증 동작용. 이 설정이 없으면, 커스텀 유저 모델 사용 시 인증과 관련하여 예상치 못한 동작이 발생 가능
+)
