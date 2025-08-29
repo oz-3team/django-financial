@@ -20,6 +20,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     # 기존 URL 유지
     path('admin/', admin.site.urls),
+    path('api/users/', include('apps.users.urls')),
     path('api/notifications/', include('apps.notification.urls')),
     path('api/analysis/', include('apps.analysis.urls')),
 
