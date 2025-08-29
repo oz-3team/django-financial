@@ -24,7 +24,7 @@ class AccountAdmin(admin.ModelAdmin):
     readonly_fields = ("balance", "created_at", "updated_at")
 
     def get_owner_email(self, obj):
-        return obj.owner.emai
+        return obj.owner.email
 
     get_owner_email.short_description = "Owner Email"
 
