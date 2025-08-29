@@ -1,6 +1,7 @@
 # tests/test_api.py
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 from typing import Any, Dict, Iterable, Optional, Tuple, Type
 from uuid import uuid4
@@ -177,6 +178,9 @@ _ALL_NAMESPACES = [
     "notification",
     "notifications",
     "users",
+    # 추가 후보
+    "auth",
+    "jwt",
 ]
 _BASES = [
     "account",
@@ -189,6 +193,9 @@ _BASES = [
     "notifications",
     "user",
     "users",
+    # 추가 후보
+    "profile",
+    "profiles",
 ]
 
 
@@ -216,8 +223,18 @@ def _assert_not_server_or_notfound(testcase: TestCase, status: int):
     testcase.assertNotIn(status, {404, 500, 502, 503})
 
 
+def _parse_json(resp) -> Any:
+    try:
+        return resp.json()
+    except Exception:
+        try:
+            return json.loads(resp.content.decode() or "{}")
+        except Exception:
+            return None
+
+
 # ------------------------------
-# API Smoke Tests
+# API Smoke Tests (router 기반)
 # ------------------------------
 class APISmokeTests(TestCase):
     """
@@ -378,4 +395,236 @@ class APISmokeTests(TestCase):
         self.skipTest("notification detail 엔드포인트를 찾지 못함")
 
 
-# tests/test_api.py  (변경점만 요약: 후보 추가)
+# ------------------------------
+# Custom path endpoints (요구사항 반영)
+# ------------------------------
+class APICustomEndpointTests(TestCase):
+    """
+    명시 경로 기반 엔드포인트 테스트:
+      - /analysis/analysis/ (GET, POST, id에 대해 GET/PUT/PATCH/DELETE)
+      - /analysis/transactions/ (동일)
+      - /notifications/unread (GET), /notifications/read/{id} (POST)
+      - /users/login/, /users/signup/, /users/token/refresh/, /users/profile/ (GET/PUT/DELETE)
+
+    존재하지 않는 경우 404가 나오면 해당 케이스는 skip 처리하여 스모크 수준 유지.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.User = get_user_model()
+        cls.user = cls.User.objects.create_user(
+            email="customapi@example.com",
+            password="pass1234!",
+        )
+        cls.builder = _ModelBuilder(user=cls.user)
+
+        cls.AnalysisModel = _get_model(
+            ("analysis", "Analysis"), ("analysis", "Analyses")
+        )
+        cls.TransactionModel = _get_model(
+            ("accounts", "Transaction"),
+            ("accounts", "Transactions"),
+            ("transactions", "Transaction"),
+            ("transactions", "Transactions"),
+        )
+        cls.NotificationModel = _get_model(
+            ("notification", "Notification"),
+            ("notifications", "Notification"),
+            ("notification", "Notifications"),
+        )
+
+        cls.analysis = (
+            cls.builder.create(cls.AnalysisModel) if cls.AnalysisModel else None
+        )
+        cls.transaction = (
+            cls.builder.create(cls.TransactionModel) if cls.TransactionModel else None
+        )
+        cls.notification = (
+            cls.builder.create(cls.NotificationModel) if cls.NotificationModel else None
+        )
+
+        cls.access_token: Optional[str] = None
+        cls.refresh_token: Optional[str] = None
+
+    # ---------- 내부 유틸 ----------
+    def _skip_if_404(self, resp, reason: str):
+        if resp.status_code == 404:
+            self.skipTest(reason)
+
+    def _auth_header(self) -> Dict[str, str]:
+        return (
+            {"HTTP_AUTHORIZATION": f"Bearer {self.access_token}"}
+            if self.access_token
+            else {}
+        )
+
+    def _extract_tokens(self, resp) -> None:
+        data = _parse_json(resp) or {}
+        for k in ("access", "token", "jwt", "access_token"):
+            if isinstance(data.get(k), str):
+                self.access_token = data[k]
+                break
+        for k in ("refresh", "refresh_token"):
+            if isinstance(data.get(k), str):
+                self.refresh_token = data[k]
+                break
+
+    # ---------- Users ----------
+    def test_users_auth_flow_and_profile(self):
+        # signup
+        payload = {
+            "email": f"{uuid4().hex[:8]}@example.com",
+            "password": "Passw0rd!",
+            "username": f"user_{uuid4().hex[:6]}",
+        }
+        resp = self.client.post(
+            "/users/signup/", data=json.dumps(payload), content_type="application/json"
+        )
+        self._skip_if_404(resp, "users/signup/ 미구현")
+        _assert_not_server_or_notfound(self, resp.status_code)
+
+        # login (email/password)
+        login_payload = {"email": payload["email"], "password": payload["password"]}
+        resp = self.client.post(
+            "/users/login/",
+            data=json.dumps(login_payload),
+            content_type="application/json",
+        )
+        self._skip_if_404(resp, "users/login/ 미구현")
+        _assert_not_server_or_notfound(self, resp.status_code)
+        self._extract_tokens(resp)
+
+        # token refresh (있을 때만)
+        if self.refresh_token:
+            resp = self.client.post(
+                "/users/token/refresh/",
+                data=json.dumps({"refresh": self.refresh_token}),
+                content_type="application/json",
+            )
+            self._skip_if_404(resp, "users/token/refresh/ 미구현")
+            _assert_not_server_or_notfound(self, resp.status_code)
+            self._extract_tokens(resp)
+
+        # profile
+        resp = self.client.get("/users/profile/", **self._auth_header())
+        self._skip_if_404(resp, "users/profile/ 미구현")
+        _assert_not_server_or_notfound(self, resp.status_code)
+
+        resp = self.client.put(
+            "/users/profile/",
+            data=json.dumps({"full_name": "API Tester", "bio": "updated by tests"}),
+            content_type="application/json",
+            **self._auth_header(),
+        )
+        _assert_not_server_or_notfound(self, resp.status_code)
+
+        resp = self.client.delete("/users/profile/", **self._auth_header())
+        _assert_not_server_or_notfound(self, resp.status_code)
+
+    # ---------- Notifications ----------
+    def test_notifications_unread_and_read(self):
+        resp = self.client.get("/notifications/unread")
+        self._skip_if_404(resp, "notifications/unread 미구현")
+        _assert_not_server_or_notfound(self, resp.status_code)
+        data = _parse_json(resp)
+        notif_id = None
+        if isinstance(data, list) and data:
+            item = data[0]
+            if isinstance(item, dict):
+                notif_id = item.get("id")
+        elif isinstance(data, dict) and data.get("results"):
+            first = data["results"][0]
+            if isinstance(first, dict):
+                notif_id = first.get("id")
+        if notif_id is not None:
+            resp = self.client.post(
+                f"/notifications/read/{notif_id}",
+                data=json.dumps({}),
+                content_type="application/json",
+            )
+            _assert_not_server_or_notfound(self, resp.status_code)
+        else:
+            self.skipTest("읽을 수 있는 알림 id 없음 — read/{id} 스킵")
+
+    # ---------- analysis/analysis CRUD ----------
+    def test_analysis_crud_direct_paths(self):
+        base = "/analysis/analysis/"
+        # list
+        resp = self.client.get(base)
+        self._skip_if_404(resp, f"{base} 미구현")
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # create (스키마 모르면 400 허용)
+        resp = self.client.post(
+            base,
+            data=json.dumps({}),
+            content_type="application/json",
+            **self._auth_header(),
+        )
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # detail (기존 fixture 이용)
+        if not self.analysis:
+            self.skipTest("analysis 인스턴스 없음 — detail/수정 스킵")
+        pk = self.analysis.pk
+        # retrieve
+        resp = self.client.get(f"{base}{pk}/")
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # put
+        resp = self.client.put(
+            f"{base}{pk}/",
+            data=json.dumps({"_test": "put"}),
+            content_type="application/json",
+            **self._auth_header(),
+        )
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # patch
+        resp = self.client.patch(
+            f"{base}{pk}/",
+            data=json.dumps({"_test": "patch"}),
+            content_type="application/json",
+            **self._auth_header(),
+        )
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # delete (존재만 확인; 권한 없으면 401/403 가능)
+        resp = self.client.delete(f"{base}{pk}/", **self._auth_header())
+        _assert_not_server_or_notfound(self, resp.status_code)
+
+    # ---------- analysis/transactions CRUD ----------
+    def test_transactions_crud_direct_paths(self):
+        base = "/analysis/transactions/"
+        # list
+        resp = self.client.get(base)
+        self._skip_if_404(resp, f"{base} 미구현")
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # create (스키마 모르면 400 허용)
+        resp = self.client.post(
+            base,
+            data=json.dumps({}),
+            content_type="application/json",
+            **self._auth_header(),
+        )
+        _assert_not_server_or_notfound(self, resp.status_code)
+        if not self.transaction:
+            self.skipTest("transaction 인스턴스 없음 — detail/수정 스킵")
+        pk = self.transaction.pk
+        # retrieve
+        resp = self.client.get(f"{base}{pk}/")
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # put
+        resp = self.client.put(
+            f"{base}{pk}/",
+            data=json.dumps({"_test": "put"}),
+            content_type="application/json",
+            **self._auth_header(),
+        )
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # patch
+        resp = self.client.patch(
+            f"{base}{pk}/",
+            data=json.dumps({"_test": "patch"}),
+            content_type="application/json",
+            **self._auth_header(),
+        )
+        _assert_not_server_or_notfound(self, resp.status_code)
+        # delete
+        resp = self.client.delete(f"{base}{pk}/", **self._auth_header())
+        _assert_not_server_or_notfound(self, resp.status_code)
