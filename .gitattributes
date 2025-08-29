@@ -12,3 +12,12 @@
 *.yaml text eol=lf
 *.yml text eol=lf
 *.lock text eol=lf
+
+# Windows 환경에서 기존 파일 LF로 변환
+# git rm --cached -r .
+# git reset --hard
+
+# or
+
+# git add --renormalize .
+# git commit -m "Normalize line endings to LF"

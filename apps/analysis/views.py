@@ -4,6 +4,7 @@ from apps.accounts.models import TransactionHistory
 from .models import Analysis
 from .serializers import AnalysisSerializer, TransactionHistorySerializer
 
+
 # ----------------------------
 # Analysis API (ViewSet)
 # ----------------------------
@@ -13,6 +14,7 @@ class AnalysisViewSet(viewsets.ModelViewSet):
     - 로그인 유저의 분석 데이터만 접근 가능
     - period_type, analysis_target으로 필터링 지원
     """
+
     serializer_class = AnalysisSerializer
     permission_classes = [IsAuthenticated]
 
@@ -27,6 +29,7 @@ class AnalysisViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
 # ----------------------------
 # TransactionHistory API
 # ----------------------------
@@ -38,6 +41,7 @@ class TransactionHistoryViewSet(viewsets.ModelViewSet):
     - 금액, 날짜순 정렬 지원
     - 설명(description) 검색 지원
     """
+
     serializer_class = TransactionHistorySerializer
     permission_classes = [IsAuthenticated]
 
@@ -55,6 +59,7 @@ class TransactionHistoryViewSet(viewsets.ModelViewSet):
         return TransactionHistory.objects.filter(
             account__user=self.request.user
         ).select_related("account")
+
 
 # request.GET으로 수동처리하기보다 DjangoFilterBackend 를 채택했고 준 필수적인 녀석이라고함
 # base.py에 각각 설정해뒀기 때문에 filterset_fields으로 url필터링,

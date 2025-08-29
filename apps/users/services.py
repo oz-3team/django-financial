@@ -1,8 +1,9 @@
 from apps.users.models import CustomUser
 
+
 class UserService:
     @staticmethod
-    def create_user(email, password, nickname='', name='', phone_number=''):
+    def create_user(email, password, nickname="", name="", phone_number=""):
         if CustomUser.objects.filter(email=email).exists():
             raise ValueError("Email already exists.")
         user = CustomUser.objects.create_user(

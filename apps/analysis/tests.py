@@ -27,12 +27,16 @@ def _get_model(*candidates: Tuple[str, str]):
 
 
 class _ModelBuilder:
-    def __init__(self, user, context: Optional[Dict[Type[models.Model], models.Model]] = None):
+    def __init__(
+        self, user, context: Optional[Dict[Type[models.Model], models.Model]] = None
+    ):
         self.user = user
         self.context = context or {}
         self.context.setdefault(type(user), user)
 
-    def create(self, model: Type[models.Model], extra: Optional[Dict[str, Any]] = None) -> models.Model:
+    def create(
+        self, model: Type[models.Model], extra: Optional[Dict[str, Any]] = None
+    ) -> models.Model:
         data: Dict[str, Any] = {}
         extra = extra or {}
 
@@ -46,7 +50,9 @@ class _ModelBuilder:
                 continue
             if isinstance(field, models.ManyToManyField):
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
 
             if field.name in extra:
@@ -59,7 +65,9 @@ class _ModelBuilder:
 
             if isinstance(field, models.ForeignKey):
                 rel_model = field.remote_field.model  # type: ignore
-                if rel_model in self.context and isinstance(self.context[rel_model], rel_model):
+                if rel_model in self.context and isinstance(
+                    self.context[rel_model], rel_model
+                ):
                     data[field.name] = self.context[rel_model]
                     continue
                 if rel_model == get_user_model():
@@ -90,11 +98,20 @@ class _ModelBuilder:
                 continue
             if field.auto_created or field.primary_key:
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
-            if field.null or getattr(field, "blank", False) or (field.default is not models.NOT_PROVIDED):
+            if (
+                field.null
+                or getattr(field, "blank", False)
+                or (field.default is not models.NOT_PROVIDED)
+            ):
                 continue
-            if isinstance(field, models.ForeignKey) and field.remote_field.model == get_user_model():
+            if (
+                isinstance(field, models.ForeignKey)
+                and field.remote_field.model == get_user_model()
+            ):
                 data[field.name] = self.user
                 continue
             if field.choices:
@@ -114,11 +131,21 @@ class _ModelBuilder:
     def _default_for(field: models.Field) -> Any:
         if isinstance(field, (models.CharField, models.SlugField)):
             base = f"u{uuid4().hex}"
-            return base[: field.max_length] if getattr(field, "max_length", None) else base
+            return (
+                base[: field.max_length] if getattr(field, "max_length", None) else base
+            )
         if isinstance(field, models.TextField):
             return f"{field.name} text"
-        if isinstance(field, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField,
-                              models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+        if isinstance(
+            field,
+            (
+                models.IntegerField,
+                models.SmallIntegerField,
+                models.BigIntegerField,
+                models.PositiveIntegerField,
+                models.PositiveSmallIntegerField,
+            ),
+        ):
             return 1
         if isinstance(field, models.FloatField):
             return 1.0
@@ -147,7 +174,9 @@ class AnalysisCRUDTests(TestCase):
             password="pass1234!",
             is_active=True,
         )
-        cls.AnalysisModel = _get_model(("analysis", "Analysis"), ("analysis", "Analyses"))
+        cls.AnalysisModel = _get_model(
+            ("analysis", "Analysis"), ("analysis", "Analyses")
+        )
         if cls.AnalysisModel is None:
             raise AssertionError("analysis.Analysis 모델을 찾지 못했습니다.")
 
@@ -196,7 +225,9 @@ class AnalysisCRUDTests(TestCase):
                 continue
             if isinstance(field, models.ForeignKey):
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
             if isinstance(field, (models.DateTimeField, models.DateField)):
                 continue
@@ -206,18 +237,38 @@ class AnalysisCRUDTests(TestCase):
                 continue
 
             try:
-                if isinstance(field, (models.CharField, models.SlugField, models.TextField)):
+                if isinstance(
+                    field, (models.CharField, models.SlugField, models.TextField)
+                ):
                     base = f"u{uuid4().hex}"
-                    setattr(obj, field.name, base[: field.max_length] if getattr(field, "max_length", None) else base)
+                    setattr(
+                        obj,
+                        field.name,
+                        base[: field.max_length]
+                        if getattr(field, "max_length", None)
+                        else base,
+                    )
                     changed = True
                     break
-                if isinstance(field, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField,
-                                      models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+                if isinstance(
+                    field,
+                    (
+                        models.IntegerField,
+                        models.SmallIntegerField,
+                        models.BigIntegerField,
+                        models.PositiveIntegerField,
+                        models.PositiveSmallIntegerField,
+                    ),
+                ):
                     setattr(obj, field.name, (current or 0) + 1)
                     changed = True
                     break
                 if isinstance(field, models.DecimalField):
-                    inc = Decimal("1").scaleb(-field.decimal_places) if field.decimal_places > 0 else Decimal("1")
+                    inc = (
+                        Decimal("1").scaleb(-field.decimal_places)
+                        if field.decimal_places > 0
+                        else Decimal("1")
+                    )
                     setattr(obj, field.name, (current or Decimal("0")) + inc)
                     changed = True
                     break
@@ -242,7 +293,9 @@ class AnalysisAdminSmokeTests(TestCase):
             email="admin@example.com",
             password="pass1234!",
         )
-        cls.AnalysisModel = _get_model(("analysis", "Analysis"), ("analysis", "Analyses"))
+        cls.AnalysisModel = _get_model(
+            ("analysis", "Analysis"), ("analysis", "Analyses")
+        )
         if cls.AnalysisModel is None:
             raise AssertionError("analysis.Analysis 모델을 찾지 못했습니다.")
         cls.obj = _ModelBuilder(cls.admin_user).create(cls.AnalysisModel)
@@ -255,10 +308,21 @@ class AnalysisAdminSmokeTests(TestCase):
             self.skipTest("Analysis 모델이 admin에 등록되어 있지 않음")
         app_label = self.AnalysisModel._meta.app_label
         model_name = self.AnalysisModel._meta.model_name
-        self.assertEqual(self.client.get(reverse(f"admin:{app_label}_{model_name}_changelist")).status_code, 200)
-        self.assertEqual(self.client.get(reverse(f"admin:{app_label}_{model_name}_add")).status_code, 200)
         self.assertEqual(
-            self.client.get(reverse(f"admin:{app_label}_{model_name}_change", args=[self.obj.pk])).status_code, 200
+            self.client.get(
+                reverse(f"admin:{app_label}_{model_name}_changelist")
+            ).status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.get(reverse(f"admin:{app_label}_{model_name}_add")).status_code,
+            200,
+        )
+        self.assertEqual(
+            self.client.get(
+                reverse(f"admin:{app_label}_{model_name}_change", args=[self.obj.pk])
+            ).status_code,
+            200,
         )
 
 
@@ -270,7 +334,11 @@ class AnalysisServicesSmokeTests(TestCase):
     def test_import_and_signatures(self):
         if self.module is None:
             self.skipTest("analysis.services 모듈 없음")
-        funcs = [(n, f) for n, f in vars(self.module).items() if callable(f) and not n.startswith("_")]
+        funcs = [
+            (n, f)
+            for n, f in vars(self.module).items()
+            if callable(f) and not n.startswith("_")
+        ]
         if not funcs:
             self.skipTest("analysis.services 내 public 함수 없음")
         for name, fn in funcs:

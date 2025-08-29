@@ -21,8 +21,16 @@ def _default_for(field: models.Field) -> Any:
         return f"{field.name}-{uuid4().hex[:12]}"
     if isinstance(field, models.TextField):
         return f"{field.name} text"
-    if isinstance(field, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField,
-                          models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+    if isinstance(
+        field,
+        (
+            models.IntegerField,
+            models.SmallIntegerField,
+            models.BigIntegerField,
+            models.PositiveIntegerField,
+            models.PositiveSmallIntegerField,
+        ),
+    ):
         return 1
     if isinstance(field, models.FloatField):
         return 1.0
@@ -67,9 +75,15 @@ def _minimal_user_kwargs() -> dict[str, Any]:
             continue
         if f.auto_created or f.primary_key:
             continue
-        if isinstance(f, (models.ManyToManyField, models.ForeignKey, models.OneToOneField)):
+        if isinstance(
+            f, (models.ManyToManyField, models.ForeignKey, models.OneToOneField)
+        ):
             # 필수 FK/M2M이면 스킵(프로젝트 종속). 생성 시 실패하면 테스트가 알려줌.
-            if not f.null and not getattr(f, "blank", False) and f.default is models.NOT_PROVIDED:
+            if (
+                not f.null
+                and not getattr(f, "blank", False)
+                and f.default is models.NOT_PROVIDED
+            ):
                 pass
             continue
         if getattr(f, "auto_now", False) or getattr(f, "auto_now_add", False):
@@ -127,19 +141,31 @@ class UserCRUDTests(TestCase):
                 continue
             if f.auto_created or f.primary_key:
                 continue
-            if isinstance(f, (models.ForeignKey, models.ManyToManyField, models.OneToOneField)):
+            if isinstance(
+                f, (models.ForeignKey, models.ManyToManyField, models.OneToOneField)
+            ):
                 continue
             if getattr(f, "auto_now", False) or getattr(f, "auto_now_add", False):
                 continue
             if isinstance(f, (models.DateTimeField, models.DateField)):
                 continue
             try:
-                if isinstance(f, (models.CharField, models.TextField, models.SlugField)):
+                if isinstance(
+                    f, (models.CharField, models.TextField, models.SlugField)
+                ):
                     setattr(u, f.name, f"updated-{uuid4().hex[:6]}")
                     changed = True
                     break
-                if isinstance(f, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField,
-                                  models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+                if isinstance(
+                    f,
+                    (
+                        models.IntegerField,
+                        models.SmallIntegerField,
+                        models.BigIntegerField,
+                        models.PositiveIntegerField,
+                        models.PositiveSmallIntegerField,
+                    ),
+                ):
                     setattr(u, f.name, (getattr(u, f.name, 0) or 0) + 1)
                     changed = True
                     break

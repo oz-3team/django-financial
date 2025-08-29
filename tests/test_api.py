@@ -26,12 +26,16 @@ def _get_model(*candidates: Tuple[str, str]):
 
 
 class _ModelBuilder:
-    def __init__(self, user, context: Optional[Dict[Type[models.Model], models.Model]] = None):
+    def __init__(
+        self, user, context: Optional[Dict[Type[models.Model], models.Model]] = None
+    ):
         self.user = user
         self.context = context or {}
         self.context.setdefault(type(user), user)
 
-    def create(self, model: Type[models.Model], extra: Optional[Dict[str, Any]] = None) -> models.Model:
+    def create(
+        self, model: Type[models.Model], extra: Optional[Dict[str, Any]] = None
+    ) -> models.Model:
         data: Dict[str, Any] = {}
         extra = extra or {}
 
@@ -45,7 +49,9 @@ class _ModelBuilder:
                 continue
             if isinstance(field, models.ManyToManyField):
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
 
             if field.name in extra:
@@ -58,7 +64,9 @@ class _ModelBuilder:
 
             if isinstance(field, models.ForeignKey):
                 rel_model = field.remote_field.model  # type: ignore[attr-defined]
-                if rel_model in self.context and isinstance(self.context[rel_model], rel_model):
+                if rel_model in self.context and isinstance(
+                    self.context[rel_model], rel_model
+                ):
                     data[field.name] = self.context[rel_model]
                     continue
                 if rel_model == get_user_model():
@@ -89,12 +97,21 @@ class _ModelBuilder:
                 continue
             if field.auto_created or field.primary_key:
                 continue
-            if getattr(field, "auto_now", False) or getattr(field, "auto_now_add", False):
+            if getattr(field, "auto_now", False) or getattr(
+                field, "auto_now_add", False
+            ):
                 continue
-            if field.null or getattr(field, "blank", False) or (field.default is not models.NOT_PROVIDED):
+            if (
+                field.null
+                or getattr(field, "blank", False)
+                or (field.default is not models.NOT_PROVIDED)
+            ):
                 continue
 
-            if isinstance(field, models.ForeignKey) and field.remote_field.model == get_user_model():
+            if (
+                isinstance(field, models.ForeignKey)
+                and field.remote_field.model == get_user_model()
+            ):
                 data[field.name] = self.user
                 continue
 
@@ -118,8 +135,16 @@ class _ModelBuilder:
             return f"{field.name}-{uuid4().hex[:12]}"
         if isinstance(field, models.TextField):
             return f"{field.name} text"
-        if isinstance(field, (models.IntegerField, models.SmallIntegerField, models.BigIntegerField,
-                              models.PositiveIntegerField, models.PositiveSmallIntegerField)):
+        if isinstance(
+            field,
+            (
+                models.IntegerField,
+                models.SmallIntegerField,
+                models.BigIntegerField,
+                models.PositiveIntegerField,
+                models.PositiveSmallIntegerField,
+            ),
+        ):
             return 1
         if isinstance(field, models.FloatField):
             return 1.0
@@ -143,14 +168,27 @@ class _ModelBuilder:
 # URL helpers
 # ------------------------------
 _ALL_NAMESPACES = [
-    "", "api", "v1", "accounts", "transactions", "analysis", "notification", "notifications", "users",
+    "",
+    "api",
+    "v1",
+    "accounts",
+    "transactions",
+    "analysis",
+    "notification",
+    "notifications",
+    "users",
 ]
 _BASES = [
-    "account", "accounts",
-    "transaction", "transactions",
-    "analysis", "analyses",
-    "notification", "notifications",
-    "user", "users",
+    "account",
+    "accounts",
+    "transaction",
+    "transactions",
+    "analysis",
+    "analyses",
+    "notification",
+    "notifications",
+    "user",
+    "users",
 ]
 
 
@@ -203,7 +241,9 @@ class APISmokeTests(TestCase):
             ("transactions", "Transaction"),
             ("transactions", "Transactions"),
         )
-        cls.AnalysisModel = _get_model(("analysis", "Analysis"), ("analysis", "Analyses"))
+        cls.AnalysisModel = _get_model(
+            ("analysis", "Analysis"), ("analysis", "Analyses")
+        )
         cls.NotificationModel = _get_model(
             ("notification", "Notification"),
             ("notifications", "Notification"),
@@ -218,13 +258,19 @@ class APISmokeTests(TestCase):
             cls.transaction = cls.builder.create(cls.TransactionModel)
         else:
             cls.transaction = None
-        cls.analysis = cls.builder.create(cls.AnalysisModel) if cls.AnalysisModel else None
-        cls.notification = cls.builder.create(cls.NotificationModel) if cls.NotificationModel else None
+        cls.analysis = (
+            cls.builder.create(cls.AnalysisModel) if cls.AnalysisModel else None
+        )
+        cls.notification = (
+            cls.builder.create(cls.NotificationModel) if cls.NotificationModel else None
+        )
 
     # -------- accounts --------
     def test_accounts_list_and_detail(self):
         bases = ["account", "accounts"]
-        list_url = _reverse_first(name for b in bases for name in _list_name_candidates(b))
+        list_url = _reverse_first(
+            name for b in bases for name in _list_name_candidates(b)
+        )
         if not list_url:
             self.skipTest("accounts 리스트 엔드포인트를 찾지 못함")
         resp = self.client.options(list_url)
@@ -250,7 +296,9 @@ class APISmokeTests(TestCase):
     # -------- transactions --------
     def test_transactions_list_and_detail(self):
         bases = ["transaction", "transactions"]
-        list_url = _reverse_first(name for b in bases for name in _list_name_candidates(b))
+        list_url = _reverse_first(
+            name for b in bases for name in _list_name_candidates(b)
+        )
         if not list_url:
             self.skipTest("transactions 리스트 엔드포인트를 찾지 못함")
         resp = self.client.options(list_url)
@@ -276,7 +324,9 @@ class APISmokeTests(TestCase):
     # -------- analysis --------
     def test_analysis_list_and_detail(self):
         bases = ["analysis", "analyses"]
-        list_url = _reverse_first(name for b in bases for name in _list_name_candidates(b))
+        list_url = _reverse_first(
+            name for b in bases for name in _list_name_candidates(b)
+        )
         if not list_url:
             self.skipTest("analysis 리스트 엔드포인트를 찾지 못함")
         resp = self.client.options(list_url)
@@ -302,7 +352,9 @@ class APISmokeTests(TestCase):
     # -------- notification --------
     def test_notification_list_and_detail(self):
         bases = ["notification", "notifications"]
-        list_url = _reverse_first(name for b in bases for name in _list_name_candidates(b))
+        list_url = _reverse_first(
+            name for b in bases for name in _list_name_candidates(b)
+        )
         if not list_url:
             self.skipTest("notification 리스트 엔드포인트를 찾지 못함")
         resp = self.client.options(list_url)
@@ -324,4 +376,6 @@ class APISmokeTests(TestCase):
                 _assert_not_server_or_notfound(self, resp.status_code)
                 return
         self.skipTest("notification detail 엔드포인트를 찾지 못함")
+
+
 # tests/test_api.py  (변경점만 요약: 후보 추가)

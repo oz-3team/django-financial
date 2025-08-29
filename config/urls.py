@@ -10,7 +10,7 @@ from drf_yasg import openapi
 schema_view = get_schema_view(
     openapi.Info(
         title="My Project API",
-        default_version='v1',
+        default_version="v1",
         description="API documentation for My Project",
     ),
     public=True,
@@ -19,15 +19,18 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     # 기존 URL 유지
-    path('admin/', admin.site.urls),
-    path('api/users/', include('apps.users.urls')),
-    path('api/notifications/', include('apps.notification.urls')),
-    path('api/analysis/', include('apps.analysis.urls')),
-
+    path("admin/", admin.site.urls),
+    path("api/users/", include("apps.users.urls")),
+    path("api/notifications/", include("apps.notification.urls")),
+    path("api/analysis/", include("apps.analysis.urls")),
     # Swagger UI
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path(
+        "swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
     # Redoc UI
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
 ]
 
 if settings.DEBUG:

@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from .models import Analysis
 import os
 
+
 @receiver(post_delete, sender=Analysis)
 def delete_analysis_file(sender, instance, **kwargs):
     """Analysis 인스턴스 삭제 시 result_image 파일도 제거"""

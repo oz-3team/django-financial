@@ -10,6 +10,7 @@ CURRENCY_CHOICES = [
     ("USD", "USD"),
 ]
 
+
 class Account(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(
@@ -20,8 +21,12 @@ class Account(models.Model):
     name = models.CharField(max_length=100)  # 은행 이름/계좌명
     number = models.CharField(max_length=32, unique=True)  # 계좌번호/식별자
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="KRW")
-    balance = models.DecimalField(max_digits=20, decimal_places=2, default=Decimal("0.00"))
-    status = models.CharField(max_length=16, default="ACTIVE")  # ACTIVE, FROZEN, CLOSED 등
+    balance = models.DecimalField(
+        max_digits=20, decimal_places=2, default=Decimal("0.00")
+    )
+    status = models.CharField(
+        max_length=16, default="ACTIVE"
+    )  # ACTIVE, FROZEN, CLOSED 등
     version = models.PositiveIntegerField(default=0)  # 낙관적 락 보조용
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,7 +58,9 @@ class TransactionHistory(models.Model):
     )
     tx_type = models.CharField(max_length=16, choices=TxType.choices)
     amount = models.DecimalField(max_digits=20, decimal_places=2)  # > 0 고정
-    running_balance = models.DecimalField(max_digits=20, decimal_places=2)  # 이 트랜잭션 이후 잔액 스냅샷
+    running_balance = models.DecimalField(
+        max_digits=20, decimal_places=2
+    )  # 이 트랜잭션 이후 잔액 스냅샷
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="KRW")
     description = models.CharField(max_length=255, blank=True, default="")
     occurred_at = models.DateTimeField(default=timezone.now)

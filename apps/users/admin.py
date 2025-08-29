@@ -18,13 +18,25 @@ class SafeUserAdmin(admin.ModelAdmin):
     """
 
     def _has(self, name: str) -> bool:
-        return any(getattr(f, "name", None) == name for f in self.model._meta.get_fields())
+        return any(
+            getattr(f, "name", None) == name for f in self.model._meta.get_fields()
+        )
 
     # 목록 컬럼
     def get_list_display(self, request):
         cols = []
-        for f in ("id", "username", "email", "first_name", "last_name",
-                  "is_active", "is_staff", "is_superuser", "last_login", "date_joined"):
+        for f in (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "is_staff",
+            "is_superuser",
+            "last_login",
+            "date_joined",
+        ):
             if self._has(f):
                 cols.append(f)
         return tuple(cols) or ("pk",)
