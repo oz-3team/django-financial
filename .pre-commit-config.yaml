@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9  # ruff 안정 버전
+    hooks:
+      - id: ruff
+        args: [ --fix ]  # 자동 수정 가능한 것들은 수정
+      - id: ruff-format  # ruff의 포맷터 (black 대신 사용 가능)
+
+#  - repo: https://github.com/carloscuesta/gitmoji-cli
+#    rev: v9.7.0
+#    hooks:
+#      - id: gitmoji
+
+
+
+# 수정 사항 있을 시, clean 하고 새로 인스톨한 다음 테스트.
+#pre-commit clean
+#pre-commit install
+#pre-commit run --all-files
+
+# 깃모지를 사용하기전에 러프를 실행시키기.
+
+#pre-commit run --all-files -> 러프굴려서 자동으로 맞추기
+#git add . -> add
+#gitmoji -c -> 깃모지 사용
+
+# or
+
+# git config --local commit.template .gitmessage.txt 를 입력하고
+# 파이참 좌측 커밋 GUI로 커밋하기. 커밋 전에 마찬가지로
+# pre-commit run --all-files -> 러프굴린 다음 수정사항들 GUI에서
