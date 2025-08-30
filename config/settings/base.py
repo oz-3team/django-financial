@@ -3,11 +3,9 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 
-
 # ------------------------------
 # Load .env if exists
 # ------------------------------
-
 load_dotenv()
 
 # ------------------------------
@@ -20,9 +18,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # ------------------------------
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-secret-key")
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+
+# ------------------------------
+# ALLOWED_HOSTS
+# ------------------------------
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost, testserver"
+    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver"
 ).split(",")
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]  # 공백 제거
 
 # ------------------------------
 # INSTALLED_APPS
@@ -74,14 +77,14 @@ ASGI_APPLICATION = "config.asgi.application"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  # 프로젝트 루트 templates 폴더
-        "APP_DIRS": True,  # 앱 내부 templates 폴더 자동 탐색
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
-                "django.template.context_processors.request",  # request 사용 가능
-                "django.contrib.auth.context_processors.auth",  # user 사용 가능
-                "django.contrib.messages.context_processors.messages",  # messages 사용 가능
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -211,7 +214,5 @@ LOGGING = {
 # ------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # 실제 SMTP 서버 세팅없이 이메일 발송 기능 테스트.
-AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",  # 기본 인증 백엔드. 사용자 인증 동작용. 이 설정이 없으면, 커스텀 유저 모델 사용 시 인증과 관련하여 예상치 못한 동작이 발생 가능
-)
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
