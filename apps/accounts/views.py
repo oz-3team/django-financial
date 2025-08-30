@@ -18,7 +18,7 @@ class AccountViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            Account.objects.filter(user=self.request.user)
+            Account.objects.filter(owner=self.request.user)
             .select_related("owner")
             .prefetch_related("transactions", "counter_transactions")
         )
