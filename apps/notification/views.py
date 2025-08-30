@@ -9,7 +9,7 @@ from .serializers import NotificationSerializer
 class UnreadNotificationList(generics.ListAPIView):
     """
     요청한 유저의 읽지 않은 알림 리스트를 반환.
-    최신 알림 순으로 정렬됨.
+    최신 알림 순으로 정렬됨
     """
 
     serializer_class = NotificationSerializer
