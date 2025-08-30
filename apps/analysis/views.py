@@ -57,7 +57,7 @@ class TransactionHistoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return TransactionHistory.objects.filter(
-            account__user=self.request.user
+            account__owner=self.request.user
         ).select_related("account")
 
 
@@ -67,3 +67,23 @@ class TransactionHistoryViewSet(viewsets.ModelViewSet):
 # 해당 설정들은 전역으로 Viewset과 ListAPIView에 자동 적용되니 임포트 해서 사용만하면 기본적으로 사용가능
 # DRF 쪽 페이징,sort등의 기능도 호환되고 코드도 깔끔하며, 여러 경우의 수가 늘어나더라도
 # 더욱 용이하다고함
+
+# 트랜잭션 히스토리 테스트 순서
+
+# docker-compose exec web python manage.py shell
+# from apps.accounts.models import Account
+# from django.contrib.auth import get_user_model
+# import uuid
+#
+# User = get_user_model()
+# user = User.objects.get(id=1)  # 로그인 유저
+#
+# # 테스트용 계좌 생성
+# acc = Account.objects.create(
+#     owner=user,
+#     name="테스트 계좌",
+#     number=str(uuid.uuid4())[:16],
+#     currency="KRW",
+#     balance=0
+# )
+# print(acc.id)  # 이 UUID를 TransactionHistory POST에 사용
