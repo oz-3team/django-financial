@@ -20,16 +20,18 @@ services:
     command: /scripts/run.sh
     env_file:
       - .env
+    environment:
+      POSTGRES_HOST: db
     ports:
       - "8000:8000"
     depends_on:
       - db
     volumes:
-      - .:/app
+      - .:/app:cached       # 소스 코드 마운트
+      - /app/.venv          # .venv는 컨테이너 내부 유지
 
 volumes:
   postgres_data:
-
 
 
 #docker-compose up -d (야물파일 디렉토리안에서) 백그라운드로 실행하기
