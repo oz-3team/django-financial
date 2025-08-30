@@ -14,6 +14,7 @@ uv run python manage.py migrate
 echo "==== Django Migration Done ===="
 
 echo "==== Starting Gunicorn with Uvicorn Worker ===="
+export DJANGO_SETTINGS_MODULE=config.settings.prod
 uv run gunicorn \
     --bind 0.0.0.0:8000 \
     -k uvicorn.workers.UvicornWorker \
