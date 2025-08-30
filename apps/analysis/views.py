@@ -1,8 +1,9 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
 from apps.accounts.models import TransactionHistory
 from .models import Analysis
 from .serializers import AnalysisSerializer, TransactionHistorySerializer
+from decimal import Decimal
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 
 # ----------------------------
@@ -33,6 +34,8 @@ class AnalysisViewSet(viewsets.ModelViewSet):
 # ----------------------------
 # TransactionHistory API
 # ----------------------------
+
+
 class TransactionHistoryViewSet(viewsets.ModelViewSet):
     """
     거래내역 CRUD API
@@ -52,13 +55,29 @@ class TransactionHistoryViewSet(viewsets.ModelViewSet):
         "account": ["exact"],
     }
     ordering_fields = ["amount", "occurred_at"]
-    ordering = ["-occurred_at"]  # 기본 정렬: 최신순
+    ordering = ["-occurred_at"]
     search_fields = ["description"]
 
     def get_queryset(self):
         return TransactionHistory.objects.filter(
             account__owner=self.request.user
         ).select_related("account")
+
+    def perform_create(self, serializer):
+        """
+        트랜잭션 생성 시 running_balance 자동 계산
+        """
+        account = serializer.validated_data["account"]
+        last_tx = (
+            TransactionHistory.objects.filter(account=account)
+            .order_by("-occurred_at")
+            .first()
+        )
+        prev_balance = last_tx.running_balance if last_tx else Decimal("0.00")
+        amount = serializer.validated_data["amount"]
+        running_balance = prev_balance + amount
+
+        serializer.save(running_balance=running_balance)
 
 
 # request.GET으로 수동처리하기보다 DjangoFilterBackend 를 채택했고 준 필수적인 녀석이라고함
@@ -86,4 +105,4 @@ class TransactionHistoryViewSet(viewsets.ModelViewSet):
 #     currency="KRW",
 #     balance=0
 # )
-# print(acc.id)  # 이 UUID를 TransactionHistory POST에 사용
+# print(acc.id)  # 이 UUID를 TransactionHistory POST에 account에다 사용

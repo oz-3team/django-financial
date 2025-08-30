@@ -2,7 +2,6 @@ import uuid
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
 from django.utils import timezone
 
 CURRENCY_CHOICES = [
@@ -57,23 +56,20 @@ class TransactionHistory(models.Model):
         related_name="transactions",
     )
     tx_type = models.CharField(max_length=16, choices=TxType.choices)
-    amount = models.DecimalField(max_digits=20, decimal_places=2)  # > 0 고정
-    running_balance = models.DecimalField(
-        max_digits=20, decimal_places=2
-    )  # 이 트랜잭션 이후 잔액 스냅샷
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="KRW")
+    amount = models.DecimalField(max_digits=20, decimal_places=2)
+    running_balance = models.DecimalField(max_digits=20, decimal_places=2)
+    currency = models.CharField(
+        max_length=3, choices=[("KRW", "KRW"), ("USD", "USD")], default="KRW"
+    )
     description = models.CharField(max_length=255, blank=True, default="")
     occurred_at = models.DateTimeField(default=timezone.now)
     posted_at = models.DateTimeField(auto_now_add=True)
 
-    # 이체 상호 참조/그룹화용
     transfer_id = models.UUIDField(null=True, blank=True, db_index=True)
-
-    # 멱등성/외부 연계
     idempotency_key = models.CharField(max_length=64, null=True, blank=True)
-    external_ref = models.CharField(max_length=64, null=True, blank=True, unique=True)
-
-    # 상대 계좌(이체 시)
+    external_ref = models.CharField(
+        max_length=64, unique=True, default=uuid.uuid4, editable=False
+    )
     counterparty = models.ForeignKey(
         Account,
         on_delete=models.PROTECT,
@@ -81,7 +77,6 @@ class TransactionHistory(models.Model):
         null=True,
         blank=True,
     )
-
     metadata = models.JSONField(default=dict, blank=True)
 
     class Meta:
@@ -90,10 +85,10 @@ class TransactionHistory(models.Model):
             models.Index(fields=["transfer_id"]),
         ]
         constraints = [
-            models.CheckConstraint(check=Q(amount__gt=0), name="amount_gt_zero"),
+            models.CheckConstraint(check=models.Q(amount__gt=0), name="amount_gt_zero"),
         ]
         unique_together = [
-            ("account", "idempotency_key"),  # 계좌 단위 멱등성
+            ("account", "idempotency_key"),
         ]
 
     def __str__(self):
