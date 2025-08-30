@@ -23,7 +23,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 # ALLOWED_HOSTS
 # ------------------------------
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver"
+    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost"
 ).split(",")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]  # 공백 제거
 
