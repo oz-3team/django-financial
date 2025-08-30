@@ -25,4 +25,5 @@ dev = [
     "pytest-django>=4.11.1",
     "pytest-cov>=6.2.1",
 ]
-uv run pytest --cov=apps --cov=tests --cov-report=html
+# pytest 사용 후 coverage를 html 파일로 작성해주는 명령어
+# uv run pytest --cov=apps --cov=tests --cov-report=html
