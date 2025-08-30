@@ -1,4 +1,4 @@
-# notification/views.py
+# apps/notification/views.py
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,22 +7,30 @@ from .serializers import NotificationSerializer
 
 
 class UnreadNotificationList(generics.ListAPIView):
+    """
+    요청한 유저의 읽지 않은 알림 리스트를 반환.
+    최신 알림 순으로 정렬됨
+    """
+
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
-        # user 정보 미리 가져오기 + 필요한 필드만 조회
         return (
             Notification.objects.filter(user=self.request.user, is_read=False)
             .select_related("user")
             .only("id", "message", "is_read", "created_at", "user__email")
+            .order_by("-created_at")  # 최신 알림 먼저
         )
 
 
-
 class MarkNotificationRead(APIView):
+    """
+    특정 알림을 읽음 처리하는 API.
+    URL Parameter: pk (알림 ID)
+    """
+
     def post(self, request, pk):
         try:
-            # 단건 조회 시 select_related 적용 가능
             notif = Notification.objects.select_related("user").get(
                 pk=pk, user=request.user
             )
@@ -32,8 +40,7 @@ class MarkNotificationRead(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # 단일 알림 읽음 처리
         notif.is_read = True
-        notif.save()
+        notif.save(update_fields=["is_read"])
 
         return Response({"detail": "알림 읽음 처리 완료"}, status=status.HTTP_200_OK)
