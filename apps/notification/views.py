@@ -7,18 +7,28 @@ from .serializers import NotificationSerializer
 
 
 class UnreadNotificationList(generics.ListAPIView):
+    """
+    요청한 유저의 읽지 않은 알림 리스트를 반환.
+    최신 알림 순으로 정렬됨
+    """
+
     serializer_class = NotificationSerializer
 
     def get_queryset(self):
-        # 요청한 유저의 읽지 않은 알림만 조회
         return (
             Notification.objects.filter(user=self.request.user, is_read=False)
             .select_related("user")
             .only("id", "message", "is_read", "created_at", "user__email")
+            .order_by("-created_at")  # 최신 알림 먼저
         )
 
 
 class MarkNotificationRead(APIView):
+    """
+    특정 알림을 읽음 처리하는 API.
+    URL Parameter: pk (알림 ID)
+    """
+
     def post(self, request, pk):
         try:
             notif = Notification.objects.select_related("user").get(
