@@ -16,14 +16,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # ------------------------------
 # SECRET KEY & DEBUG
 # ------------------------------
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "your-secret-key")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "C9ne/sbdmRXkqYkwwJ//xhFkUAuTFuekSPPlnsNPBrnz+XXJuGhK/R+vAgeZwY2x iZI=")
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
 # ------------------------------
 # ALLOWED_HOSTS
 # ------------------------------
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost"
+    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,15.164.219.24"
 ).split(",")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]  # 공백 제거
 
@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party 앱
     "rest_framework",
-    "drf_yasg",  # Swagger
+    "drf_yasg",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     # 로컬 앱
@@ -72,7 +72,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # ------------------------------
-# TEMPLATES (HTML 렌더링용)
+# TEMPLATES
 # ------------------------------
 TEMPLATES = [
     {
@@ -134,7 +134,7 @@ DATABASES = {
 }
 
 # ------------------------------
-# JWT 설정
+# JWT
 # ------------------------------
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -154,14 +154,10 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "TOKEN_TYPE_CLAIM": "token_type",
-    "JTI_CLAIM": "jti",
-    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
 # ------------------------------
-# DRF 기본 설정
+# DRF
 # ------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.openapi.AutoSchema",
@@ -215,4 +211,6 @@ LOGGING = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
+# docker-compose logs web 
+# EC2 에서 docker-compose를 사용중이라면 register하고  
+# 해당 명령어로 email check 할것..AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
