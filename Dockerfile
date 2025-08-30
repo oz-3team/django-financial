@@ -10,34 +10,33 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # 의존성 설치 (uv 실행 가능)
-# --no-install-project 플래그는 pyproject.toml에 명시된 프로젝트 자체는 설치하지 않고, 
-# 명시된 의존성만 설치하도록 합니다.
 RUN uv sync --all-packages --no-install-project
 
 # 전체 프로젝트 복사
 COPY . .
 
-# app 및 의존성 완성
+# 프로젝트 및 의존성 완성
 RUN uv sync --all-packages
-
 
 # 2단계: 실제 실행 이미지
 FROM python:3.13-slim
+
+# PostgreSQL client 설치 (pg_isready 포함)
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # 빌드 스테이지에서 완성된 /app 폴더 복사
 COPY --from=builder /app /app
+COPY --from=builder /bin/uv /bin/uv
 COPY ./scripts /scripts
 
-# [수정] Windows의 CRLF 줄 끝을 Linux의 LF로 변환
-RUN sed -i 's/$//' /scripts/run.sh
+# 실행 스크립트 권한 설정
 RUN chmod +x /scripts/run.sh
 
-# PATH에 앱의 가상환경 포함 (uv가 설치한 가상환경)
+# uv 환경 PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 
-# 시작 명령
 CMD ["/scripts/run.sh"]
