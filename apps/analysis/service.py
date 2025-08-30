@@ -1,4 +1,3 @@
-# apps/analysis/services.py
 from apps.accounts.models import TransactionHistory, Account
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncYear
