@@ -21,4 +21,8 @@ dependencies = [
 dev = [
     "pre-commit>=4.3.0",
     "ruff>=0.12.10",
+    "pytest>=8.4.1",
+    "pytest-django>=4.11.1",
+    "pytest-cov>=6.2.1",
 ]
+uv run pytest --cov=apps --cov=tests --cov-report=html

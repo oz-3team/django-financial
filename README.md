@@ -67,6 +67,8 @@ erDiagram
 
 ```
 
+---
+
 # 플로우 차트: 사용자 인증 흐름
 <details>
 <summary>펼쳐보기</summary>
