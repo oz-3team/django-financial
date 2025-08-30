@@ -1,4 +1,4 @@
-# notification/urls.py
+# apps/notification/urls.py
 from django.urls import path
 from .views import UnreadNotificationList, MarkNotificationRead
 
