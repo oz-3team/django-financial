@@ -3,7 +3,7 @@ name: Deploy to EC2 via Docker Compose
 on:
   push:
     branches:
-      - test
+      - release
 
 jobs:
   deploy:
@@ -48,7 +48,7 @@ jobs:
 
             echo "📥 Fetching latest code..."
             # git 최신 커밋상태로
-            BRANCH=test
+            BRANCH=release
             git fetch origin $BRANCH
             git reset --hard origin/$BRANCH
 
