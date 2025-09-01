@@ -48,4 +48,4 @@ jobs:
       - name: Post-deployment verification
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            'cd ~/app && docker-compose ps && echo "✅ Verification completed"'
+            'cd ~/django-financial && docker-compose ps && echo "✅ Verification completed"'
