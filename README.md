@@ -1,106 +1,124 @@
 
-[📜 프로젝트 개요](#-프로젝트-개요) | [📂 프로젝트 구조](#-프로젝트-구조) | [💾 ERD](#-erd) | [📊 플로우 차트](#-플로우-차트-사용자-인증-흐름) | [📖 API 명세서](#-api-명세서)
-
-
-# Django Financial Project
+# Django Financial Project - API 문서
 
 ## 📜 프로젝트 개요
 
-- Django 기반 개인 금융 관리 서비스
-- 사용자 계좌, 거래 내역, 분석, 알림 등을 관리
-- Docker + Docker Compose 환경에서 실행 가능
-
+Django 기반 개인 금융 관리 서비스로, 사용자 계좌, 거래 내역, 분석, 알림 등을 관리합니다.  
+Docker + Docker Compose 환경에서 실행 가능합니다.
 
 ---
 
 ## 📂 프로젝트 구조
 
 <details>
-<summary>구조 펼쳐보기</summary>
+<summary>프로젝트 구조 보기</summary>
 
-    django-financial/
-    ├── .dockerignore
-    ├── .env
-    ├── .env.example
-    ├── .gitattributes
-    ├── .github/
-    │   └── workflows/
-    │       └── checks.yml
-    ├── .gitignore
-    ├── .gitmessage.txt
-    ├── .idea/
-    ├── .pre-commit-config.yaml
-    ├── .ruff_cache/
-    ├── apps/
-    │   ├── __init__.py
-    │   ├── accounts/
-    │   │   ├── __init__.py
-    │   │   ├── admin.py
-    │   │   ├── apps.py
-    │   │   ├── migrations/
-    │   │   ├── models.py
-    │   │   ├── serializers.py
-    │   │   ├── services.py
-    │   │   ├── tests.py
-    │   │   └── urls.py
-    │   ├── analysis/
-    │   │   ├── __init__.py
-    │   │   ├── admin.py
-    │   │   ├── apps.py
-    │   │   ├── migrations/
-    │   │   ├── models.py
-    │   │   ├── serializers.py
-    │   │   ├── service.py
-    │   │   ├── signals.py
-    │   │   ├── tests.py
-    │   │   └── urls.py
-    │   ├── core/
-    │   │   ├── __init__.py
-    │   │   ├── admin.py
-    │   │   ├── apps.py
-    │   │   ├── management/
-    │   │   ├── migrations/
-    │   │   ├── models.py
-    │   │   └── tests.py
-    │   └── users/
-    │       ├── __init__.py
-    │       ├── admin.py
-    │       ├── apps.py
-    │       ├── migrations/
-    │       ├── models.py
-    │       ├── serializers.py
-    │       ├── tests.py
-    │       ├── tokens.py
-    │       └── urls.py
-    ├── config/
-    │   ├── __init__.py
-    │   ├── asgi.py
-    │   ├── settings/
-    │   │   ├── __init__.py
-    │   │   ├── base.py
-    │   │   ├── dev.py
-    │   │   └── prod.py
-    │   ├── urls.py
-    │   └── wsgi.py
-    ├── Dockerfile
-    ├── docker-compose.yaml
-    ├── manage.py
-    ├── media/
-    ├── pyproject.toml
-    ├── pytest.ini
-    ├── README.md
-    ├── scripts/
-    │   └── run.sh
-    ├── tests/
-    │   ├── __init__.py
-    │   └── test_api.py
-    └── uv.lock
+```
+django-financial/
+├── .dockerignore
+├── .env
+├── .env.example
+├── .gitattributes
+├── .github/
+│   └── workflows/
+│       ├── build.yml
+│       ├── deploy.yml
+│       └── checks.yml
+├── .gitignore
+├── .gitmessage.txt
+├── .pre-commit-config.yaml
+├── apps/
+│   ├── __init__.py
+│   ├── accounts/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── services.py
+│   │   ├── tests.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── analysis/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── services.py
+│   │   ├── signals.py
+│   │   ├── tests.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── management/
+│   │   │   └── commands/
+│   │   │       └── wait_for_db.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── tests.py
+│   │   └── views.py
+│   ├── notification/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── signals.py
+│   │   ├── tests.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   └── users/
+│       ├── __init__.py
+│       ├── admin.py
+│       ├── apps.py
+│       ├── migrations/
+│       ├── models.py
+│       ├── serializers.py
+│       ├── tests.py
+│       ├── tokens.py
+│       ├── urls.py
+│       └── views.py
+├── config/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── dev.py
+│   │   └── prod.py
+│   ├── urls.py
+│   └── wsgi.py
+├── Dockerfile
+├── docker-compose.yaml
+├── manage.py
+├── media/
+├── pyproject.toml
+├── pytest.ini
+├── README.md
+├── scripts/
+│   └── run.sh
+├── tests/
+│   ├── __init__.py
+│   ├── test_api.py
+│   └── test_auth_flow.py
+└── uv.lock
+```
 
 </details>
 
 ---
 
-## 💾 ERD
+## 💾 ERD (Entity Relationship Diagram)
+
+<details>
+<summary>데이터베이스 구조 보기</summary>
 
 ```mermaid
 erDiagram
@@ -157,19 +175,16 @@ erDiagram
     ACCOUNTS ||--o{ TRANSACTION_HISTORY : "거래 내역 보유"
     USERS ||--o{ ANALYSIS : "분석 요청"
     USERS ||--o{ NOTIFICATIONS : "알림 수신"
-    
 ```
+
+</details>
 
 ---
 
-## 📊 플로우 차트: 사용자 인증 흐름
-
-이 플로우 차트는 사용자의 로그인 및 인증 토큰 관리 과정을 시각적으로 보여줍니다.    
-각 과정에 대한 상세 API는 [API 명세서](#-api-명세서)의 **인증 & 사용자 관리** 섹션에서 확인할 수 있습니다.
+## 📊 사용자 인증 플로우
 
 <details>
-<summary>플로우 차트 펼쳐보기</summary>
-    
+<summary>인증 흐름 차트 보기</summary>
 
 ```mermaid
 flowchart TD
@@ -193,120 +208,206 @@ flowchart TD
 
 ## 📖 API 명세서
 
+**Base URL**: `{{base_url}}/api/`
 
-**users/** : 회원가입/로그인/토큰/내 정보 관리  
-**accounts/** : 계좌 관리  
-**analysis/analysis/** : 분석 데이터  
-**analysis/transactions/** : 거래내역 관리  
-**notifications/** : 알림 관리  
+### API 엔드포인트 개요
 
----
-
-<details>
-<summary>📂 전체 API 문서 (펼쳐보기)</summary>
+- **users/**: 회원가입/로그인/토큰/내 정보 관리
+- **accounts/**: 계좌 관리
+- **analysis/analysis/**: 분석 데이터
+- **analysis/transactions/**: 거래내역 관리
+- **notifications/**: 알림 관리
 
 ---
 
+## 🔐 1. 인증 & 사용자 관리 (Users & Auth)
+
 <details>
-<summary>1. 인증 & 사용자 관리 (Users & Auth)</summary>
+<summary>회원가입</summary>
 
 ### 🔹 회원가입
-POST /api/users/register/
-Content-Type: application/json
+**POST** `/api/users/signup/`
 
+**Content-Type**: `application/json`
+
+**요청 본문**:
 ```json
-요청:
-{ "email": "user@test.com", "password": "비밀번호", "name": "홍길동" }
-```
-```json
-응답: `201 Created`
-{ "id": "uuid", "email": "user@test.com", "is_active": false }
-```
-```undefined
-curl -X POST {{base_url}}/api/users/register/
--H "Content-Type: application/json"
--d '{"email":"user@test.com","password":"비밀번호","name":"홍길동"}'
+{
+    "email": "user@example.com",
+    "password": "password123",
+    "nickname": "string",
+    "name": "string",
+    "phone_number": "string"
+}
 ```
 
----
+**성공 응답 (201 Created)**: 사용자 정보 반환 (이메일 인증 필요)
+
+**cURL 예시**:
+```bash
+curl -X POST {{base_url}}/api/users/signup/ \
+-H "Content-Type: application/json" \
+-d '{"email":"user@example.com","password":"password123","name":"홍길동","nickname":"hong","phone_number":"010-1234-5678"}'
+```
+
+</details>
+
+<details>
+<summary>이메일 인증</summary>
+
+### 🔹 이메일 인증
+**GET** `/api/users/verify-email/<uidb64>/<token>/`
+
+**설명**: 이메일로 전송된 링크를 통해 계정을 활성화합니다.
+
+**성공 응답 (200 OK)**:
+```json
+{
+    "msg": "Email verified successfully"
+}
+```
+
+**cURL 예시**:
+```bash
+curl -X GET {{base_url}}/api/users/verify-email/{uidb64}/{token}/
+```
+
+</details>
+
+<details>
+<summary>로그인</summary>
 
 ### 🔹 로그인
-POST /api/users/login/
-Content-Type: application/json
+**POST** `/api/users/login/`
 
+**Content-Type**: `application/json`
+
+**요청 본문**:
 ```json
-요청:
-{ "email": "user@test.com", "password": "비밀번호" }
+{
+    "email": "user@example.com",
+    "password": "password123"
+}
 ```
+
+**성공 응답 (200 OK)**: Access, Refresh 토큰을 포함한 응답과 함께 쿠키에 토큰 저장
 ```json
-응답:
 {
     "msg": "Login success",
     "refresh": "<jwt_refresh>",
     "access": "<jwt_access>"
 }
 ```
-```undefined
-curl -X POST {{base_url}}/api/users/login/
--H "Content-Type: application/json"
--d '{"email":"user@test.com","password":"비밀번호"}'
+
+**cURL 예시**:
+```bash
+curl -X POST {{base_url}}/api/users/login/ \
+-H "Content-Type: application/json" \
+-d '{"email":"user@example.com","password":"password123"}'
 ```
 
----
+</details>
 
-### 🔹 토큰 재발급
-POST /api/users/token/refresh/
-
-```json
-요청:
-{ "refresh": "<refresh_token>" }
-```
-```json
-응답:
-{ "access": "<new_access_token>" }
-```
-```undefined
-curl -X POST {{base_url}}/api/users/token/refresh/
--H "Content-Type: application/json"
--d '{"refresh":"<refresh_token>"}'
-```
-
----
-
-### 🔹 내 정보 조회
-GET /api/users/me/
-Authorization: Bearer <access_token>
-
-```undefined
-curl -X GET {{base_url}}/api/users/me/
--H "Authorization: Bearer <access_token>"
-```
-
----
+<details>
+<summary>로그아웃</summary>
 
 ### 🔹 로그아웃
-POST /api/users/logout/
-Authorization: Bearer <access_token>
+**POST** `/api/users/logout/`
 
-```undefined
-curl -X POST {{base_url}}/api/users/logout/
+**Authorization**: `Bearer <access_token>`
+
+**설명**: 서버에 저장된 Refresh 토큰을 만료시키고, 클라이언트의 쿠키를 삭제합니다.
+
+**성공 응답 (200 OK)**:
+```json
+{
+    "msg": "Logout success"
+}
+```
+
+**cURL 예시**:
+```bash
+curl -X POST {{base_url}}/api/users/logout/ \
 -H "Authorization: Bearer <access_token>"
+```
+
+</details>
+
+<details>
+<summary>내 정보 관리</summary>
+
+### 🔹 내 정보 관리
+**GET, PUT, PATCH, DELETE** `/api/users/profile/`
+
+**Authorization**: `Bearer <access_token>`
+
+- **GET**: 현재 로그인된 사용자 정보 조회
+- **PUT**: 사용자 정보 전체 수정
+- **PATCH**: 사용자 정보 부분 수정
+- **DELETE**: 사용자 계정 삭제
+
+**cURL 예시**:
+```bash
+# 내 정보 조회
+curl -X GET {{base_url}}/api/users/profile/ \
+-H "Authorization: Bearer <access_token>"
+
+# 내 정보 수정 (부분)
+curl -X PATCH {{base_url}}/api/users/profile/ \
+-H "Authorization: Bearer <access_token>" \
+-H "Content-Type: application/json" \
+-d '{"nickname":"새로운닉네임"}'
+```
+
+</details>
+
+<details>
+<summary>토큰 재발급</summary>
+
+### 🔹 토큰 재발급
+**POST** `/api/users/token/refresh/`
+
+**Content-Type**: `application/json`
+
+**요청 본문**:
+```json
+{
+    "refresh": "<refresh_token>"
+}
+```
+
+**성공 응답 (200 OK)**:
+```json
+{
+    "access": "<new_access_token>"
+}
+```
+
+**cURL 예시**:
+```bash
+curl -X POST {{base_url}}/api/users/token/refresh/ \
+-H "Content-Type: application/json" \
+-d '{"refresh":"<refresh_token>"}'
 ```
 
 </details>
 
 ---
 
+## 💳 2. 계좌 관리 (Accounts)
+
+`viewsets.ModelViewSet`을 사용하여 계좌에 대한 CRUD API를 제공합니다.
+
 <details>
-<summary>2. 계좌 관리 (Accounts)</summary>
+<summary>계좌 목록 조회 및 생성</summary>
 
 ### 🔹 계좌 목록 조회
-GET /api/accounts/
+**GET** `/api/accounts/`
 
-Authorization: Bearer <access_token>
+**Authorization**: `Bearer <access_token>`
 
+**성공 응답**:
 ```json
-응답:
 [
     {
         "id": "uuid",
@@ -318,52 +419,62 @@ Authorization: Bearer <access_token>
     }
 ]
 ```
-```undefined
-curl -X GET {{base_url}}/api/accounts/
--H "Authorization: Bearer <access_token>"
-```
-
-
----
 
 ### 🔹 계좌 생성
-POST /api/accounts/
+**POST** `/api/accounts/`
 
-Content-Type: application/json
+**Content-Type**: `application/json`  
+**Authorization**: `Bearer <access_token>`
 
-Authorization: Bearer <access_token>
-
+**요청 본문**:
 ```json
-요청:
-{ "name": "카카오뱅크", "number": "123-456-789", "currency": "KRW" }
+{
+    "name": "카카오뱅크",
+    "number": "123-456-789",
+    "currency": "KRW"
+}
 ```
-```undefined
-curl -X POST {{base_url}}/api/accounts/
+
+**cURL 예시**:
+```bash
+# 계좌 목록 조회
+curl -X GET {{base_url}}/api/accounts/ \
 -H "Authorization: Bearer <access_token>"
--H "Content-Type: application/json"
+
+# 계좌 생성
+curl -X POST {{base_url}}/api/accounts/ \
+-H "Authorization: Bearer <access_token>" \
+-H "Content-Type: application/json" \
 -d '{"name":"카카오뱅크","number":"123-456-789","currency":"KRW"}'
 ```
 
+</details>
 
----
+<details>
+<summary>특정 계좌 조회, 수정, 삭제</summary>
 
 ### 🔹 특정 계좌 조회
-GET /api/accounts/{id}/
+**GET** `/api/accounts/{id}/`
 
-Authorization: Bearer <access_token>
+### 🔹 특정 계좌 전체 수정
+**PUT** `/api/accounts/{id}/`
 
-```undefined
-curl -X GET {{base_url}}/api/accounts/{id}/
+### 🔹 특정 계좌 부분 수정
+**PATCH** `/api/accounts/{id}/`
+
+### 🔹 특정 계좌 삭제
+**DELETE** `/api/accounts/{id}/`
+
+**Authorization**: `Bearer <access_token>` (모든 요청에 필요)
+
+**cURL 예시**:
+```bash
+# 특정 계좌 조회
+curl -X GET {{base_url}}/api/accounts/{id}/ \
 -H "Authorization: Bearer <access_token>"
-```
 
----
-
-### 🔹 계좌 삭제
-DELETE /api/accounts/{id}/
-
-```undefined
-curl -X DELETE {{base_url}}/api/accounts/{id}/
+# 계좌 삭제
+curl -X DELETE {{base_url}}/api/accounts/{id}/ \
 -H "Authorization: Bearer <access_token>"
 ```
 
@@ -371,79 +482,24 @@ curl -X DELETE {{base_url}}/api/accounts/{id}/
 
 ---
 
-<details>
-<summary>3. 거래 내역 (Transactions)</summary>
-
-`/api/analysis/transactions/`
-
-### 🔹 거래 내역 조회
-GET /api/analysis/transactions/?tx_type=DEPOSIT&ordering=-occurred_at
-
-- 필터링 지원 : `tx_type`, `amount__gte`, `occurred_at__lte`, `account`  
-- 정렬 : `ordering=amount` or `ordering=-occurred_at`  
-- 검색 : `?search=급여`
-
-```undefined
-curl -X GET "{{base_url}}/api/analysis/transactions/?tx_type=DEPOSIT&ordering=-occurred_at"
--H "Authorization: Bearer <access_token>"
-```
-
-
----
-
-### 🔹 거래 내역 생성
-POST /api/analysis/transactions/
-
-Content-Type: application/json
-
-Authorization: Bearer <access_token>
-
-```json
-요청:
-    {
-        "account": "uuid",
-        "tx_type": "DEPOSIT",
-        "amount": "50000.00",
-        "currency": "KRW",
-        "description": "급여 입금"
-    }
-```
-```undefined
-curl -X POST {{base_url}}/api/analysis/transactions/
--H "Authorization: Bearer <access_token>"
--H "Content-Type: application/json"
--d '{"account":"uuid","tx_type":"DEPOSIT","amount":"50000.00","currency":"KRW","description":"급여 입금"}'
-```
-
-
----
-
-### 🔹 단일 거래
-GET /api/analysis/transactions/{id}/
-
-PUT /api/analysis/transactions/{id}/
-
-PATCH /api/analysis/transactions/{id}/
-
-DELETE /api/analysis/transactions/{id}/
-
-
-</details>
-
----
+## 📊 3. 분석 및 거래 내역 (Analysis & Transactions)
 
 <details>
-<summary>4. 분석 Report (Analysis)</summary>
+<summary>분석 데이터 관리</summary>
 
-`/api/analysis/analysis/`
+### 🔹 분석 데이터 관리
+`viewsets.ModelViewSet`을 사용하여 분석 데이터에 대한 CRUD API를 제공합니다.
 
-### 🔹 분석 생성
-POST /api/analysis/analysis/
+**GET, POST** `/api/analysis/analysis/`  
+**GET, PUT, PATCH, DELETE** `/api/analysis/analysis/{id}/`
 
-Content-Type: application/json
+**Authorization**: `Bearer <access_token>`  
+**필터링**: `period_type`, `analysis_target`
 
-Authorization: Bearer <access_token>
+### 분석 생성 예시
+**POST** `/api/analysis/analysis/`
 
+**요청 본문**:
 ```json
 {
     "analysis_target": "EXPENSE",
@@ -453,51 +509,83 @@ Authorization: Bearer <access_token>
     "description": "7월 지출 분석"
 }
 ```
-```undefined
-curl -X POST {{base_url}}/api/analysis/analysis/
+
+**cURL 예시**:
+```bash
+# 분석 목록 조회 (필터링)
+curl -X GET "{{base_url}}/api/analysis/analysis/?period_type=MONTHLY&analysis_target=INCOME" \
 -H "Authorization: Bearer <access_token>"
--H "Content-Type: application/json"
+
+# 분석 생성
+curl -X POST {{base_url}}/api/analysis/analysis/ \
+-H "Authorization: Bearer <access_token>" \
+-H "Content-Type: application/json" \
 -d '{"analysis_target":"EXPENSE","period_type":"MONTHLY","start_date":"2025-07-01","end_date":"2025-07-31","description":"7월 지출 분석"}'
 ```
 
+</details>
 
----
+<details>
+<summary>거래 내역 관리</summary>
 
-### 🔹 분석 조회
-GET /api/analysis/analysis/?period_type=MONTHLY&analysis_target=INCOME
+### 🔹 거래 내역 관리
+`viewsets.ModelViewSet`을 사용하여 거래 내역에 대한 CRUD API를 제공합니다.
 
-```undefined
-curl -X GET "{{base_url}}/api/analysis/analysis/?period_type=MONTHLY"
--H "Authorization: Bearer <access_token>"
+**GET, POST** `/api/analysis/transactions/`  
+**GET, PUT, PATCH, DELETE** `/api/analysis/transactions/{id}/`
+
+**Authorization**: `Bearer <access_token>`
+
+### 필터링 및 정렬 옵션
+- **필터링**: `tx_type`, `amount` (gte, lte), `occurred_at` (gte, lte), `account`
+- **정렬**: `amount`, `occurred_at`
+- **검색**: `description`
+
+### 거래 내역 생성 예시
+**POST** `/api/analysis/transactions/`
+
+**요청 본문**:
+```json
+{
+    "account": "uuid",
+    "tx_type": "DEPOSIT",
+    "amount": "50000.00",
+    "currency": "KRW",
+    "description": "급여 입금"
+}
 ```
 
-
----
-
-### 🔹 단일 분석 상세
-GET /api/analysis/analysis/{id}/
-
-```undefined
-curl -X GET {{base_url}}/api/analysis/analysis/{id}/
+**cURL 예시**:
+```bash
+# 거래 내역 조회 (필터링 및 정렬)
+curl -X GET "{{base_url}}/api/analysis/transactions/?tx_type=DEPOSIT&ordering=-occurred_at" \
 -H "Authorization: Bearer <access_token>"
+
+# 거래 내역 생성
+curl -X POST {{base_url}}/api/analysis/transactions/ \
+-H "Authorization: Bearer <access_token>" \
+-H "Content-Type: application/json" \
+-d '{"account":"uuid","tx_type":"DEPOSIT","amount":"50000.00","currency":"KRW","description":"급여 입금"}'
 ```
 
 </details>
 
 ---
 
+## 🔔 4. 알림 (Notifications)
+
 <details>
-<summary>5. 알림 (Notification)</summary>
+<summary>읽지 않은 알림 목록</summary>
 
-`/api/notifications/`
+### 🔹 읽지 않은 알림 목록
+**GET** `/api/notifications/unread/`
 
-### 🔹 안 읽은 알림 목록
-GET /api/notifications/unread/
+**Authorization**: `Bearer <access_token>`
 
-Authorization: Bearer <access_token>
+**설명**: 로그인한 사용자의 읽지 않은 알림을 최신순으로 조회합니다.
 
+**성공 응답**:
 ```json
-응답:
 [
     {
         "id": 1,
@@ -507,41 +595,53 @@ Authorization: Bearer <access_token>
     }
 ]
 ```
-```undefined
-curl -X GET {{base_url}}/api/notifications/unread/
+
+**cURL 예시**:
+```bash
+curl -X GET {{base_url}}/api/notifications/unread/ \
 -H "Authorization: Bearer <access_token>"
 ```
 
+</details>
 
----
+<details>
+<summary>알림 읽음 처리</summary>
 
 ### 🔹 알림 읽음 처리
-POST /api/notifications/read/{id}/
+**POST** `/api/notifications/read/{id}/`
 
-Authorization: Bearer <access_token>
+**Authorization**: `Bearer <access_token>`
 
+**설명**: 특정 ID의 알림을 읽음 상태로 변경합니다.
+
+**성공 응답 (200 OK)**:
 ```json
-응답:
-{"detail": "알림 읽음 처리 완료"}
+{
+    "detail": "알림 읽음 처리 완료"
+}
 ```
-```undefined
-curl -X POST {{base_url}}/api/notifications/read/1/
+
+**cURL 예시**:
+```bash
+curl -X POST {{base_url}}/api/notifications/read/1/ \
 -H "Authorization: Bearer <access_token>"
 ```
-
 
 </details>
 
 ---
 
+## 📚 5. API 문서
+
 <details>
-<summary>6. Swagger & Redoc</summary>
+<summary>Swagger & Redoc</summary>
 
-Swagger UI : GET /swagger/
+### 🔹 API 문서 접근
+- **Swagger UI**: `GET /swagger/`
+- **Redoc**: `GET /redoc/`
 
-Redoc : GET /redoc/
-
-```undefined
+**cURL 예시**:
+```bash
 curl -X GET {{base_url}}/swagger/
 curl -X GET {{base_url}}/redoc/
 ```
@@ -550,4 +650,33 @@ curl -X GET {{base_url}}/redoc/
 
 ---
 
+## ⚙️ 환경 설정
+
+<details>
+<summary>Docker 실행</summary>
+
+### Docker 환경에서 실행
+```bash
+# 환경변수 설정
+cp .env.example .env
+
+# Docker Compose로 실행
+docker-compose up -d
+
+# 마이그레이션 실행
+docker-compose exec web python manage.py migrate
+
+# 슈퍼유저 생성
+docker-compose exec web python manage.py createsuperuser
+```
+
 </details>
+
+---
+
+## 📝 참고사항
+
+- 모든 인증이 필요한 API는 `Authorization: Bearer <access_token>` 헤더가 필요합니다.
+- 토큰은 HttpOnly, Secure 쿠키로도 관리됩니다.
+- 모든 날짜/시간은 ISO 8601 형식을 사용합니다.
+- 페이지네이션이 적용된 API는 `page`, `page_size` 파라미터를 지원합니다.
