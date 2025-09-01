@@ -48,8 +48,9 @@ jobs:
 
             echo "📥 Fetching latest code..."
             # git 최신 커밋상태로
-            git fetch origin ${GITHUB_REF##*/}
-            git reset --hard origin/${GITHUB_REF##*/}
+            BRANCH=test
+            git fetch origin $BRANCH
+            git reset --hard origin/$BRANCH
 
             echo "🐳 Restarting Docker Compose..."
             # 생각보다 용량차지가 꽤 있어서 프룬을 썼으나, --noche 사용하며 간소화, 
