@@ -24,7 +24,8 @@ jobs:
         run: |
           ssh -t -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
-            cd ~/app || { echo "❌ App directory not found"; exit 1; }
+            cd ~/django-financial || { echo "❌ App directory not found"; exit 1; }
+
 
             echo "📥 Fetching latest code..."
             git fetch origin ec2-damon
