@@ -38,7 +38,7 @@ jobs:
 
             echo "🔑 Setting directory permissions..."
             #nginx 권한 설정
-            sudo chown -R $USER:$USER $STATIC_DIR $MEDIA_DIR
+            sudo chown -R ubuntu:ubuntu $STATIC_DIR $MEDIA_DIR
             sudo chmod -R 755 $STATIC_DIR $MEDIA_DIR
 
             # 상위 디렉터리 접근 권한 ( 거의 모든 경로에 다 권한주기)
