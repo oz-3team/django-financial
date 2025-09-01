@@ -1,0 +1,42 @@
+
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    command: /scripts/run.sh
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - .:/app:cached       # 소스 코드 마운트
+      - /app/.venv          # .venv는 컨테이너 내부 유지
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+volumes:
+  postgres_data:
+
+
+#docker-compose up -d (야물파일 디렉토리안에서) 백그라운드로 실행하기
+#docker-compose down ("") 종료시키기
+#docker-compose up -d --build 변경사항 빌드 후 실행

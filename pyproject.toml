@@ -5,4 +5,25 @@ description = "Add your description here"
 requires-python = ">=3.13"
 dependencies = [
     "django>=5.2.5",
+    "django-restframework>=0.0.1",
+    "drf-spectacular>=0.28.0",
+    "drf-yasg>=1.21.10",
+    "gunicorn>=21.2",
+    "pillow>=11.3.0",
+    "psycopg2-binary>=2.9.10",
+    "uvicorn>=0.24.0",
+    "python-dotenv>=0.21.0",
+    "django-filter>=25.1",
+    "djangorestframework-simplejwt>=5.5.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "ruff>=0.12.10",
+    "pytest>=8.4.1",
+    "pytest-django>=4.11.1",
+    "pytest-cov>=6.2.1",
+]
+# pytest 사용 후 coverage를 html 파일로 작성해주는 명령어
+# uv run pytest --cov=apps --cov=tests --cov-report=html
