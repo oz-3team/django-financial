@@ -1,3 +1,5 @@
+[📜 프로젝트 개요](#-프로젝트-개요) | [📂 프로젝트 구조](#-프로젝트-구조) | [💾 ERD](#-erd) | [📊 사용자 인증 플로우](#-사용자-인증-플로우) | [📖 API 명세서](#-api-명세서)
+
 
 # Django Financial Project - API 문서
 
@@ -115,7 +117,7 @@ django-financial/
 
 ---
 
-## 💾 ERD (Entity Relationship Diagram)
+## **💾 ERD**
 
 <details>
 <summary>데이터베이스 구조 보기</summary>
@@ -181,7 +183,7 @@ erDiagram
 
 ---
 
-## 📊 사용자 인증 플로우
+## **📊 사용자 인증 플로우**
 
 <details>
 <summary>인증 흐름 차트 보기</summary>
