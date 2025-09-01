@@ -16,14 +16,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # ------------------------------
 # SECRET KEY & DEBUG
 # ------------------------------
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "C9ne/sbdmRXkqYkwwJ//xhFkUAuTFuekSPPlnsNPBrnz+XXJuGhK/R+vAgeZwY2x iZI=")
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "C9ne/sbdmRXkqYkwwJ//xhFkUAuTFuekSPPlnsNPBrnz+XXJuGhK/R+vAgeZwY2x iZI=",
+)
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
 # ------------------------------
 # ALLOWED_HOSTS
 # ------------------------------
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,15.164.219.24"
+    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,43.201.76.173,[::1]"
 ).split(",")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]  # 공백 제거
 
@@ -211,6 +214,6 @@ LOGGING = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-# docker-compose logs web 
-# EC2 에서 docker-compose를 사용중이라면 register하고  
+# docker-compose logs web
+# EC2 에서 docker-compose를 사용중이라면 register하고
 # 해당 명령어로 email check 할것..AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)

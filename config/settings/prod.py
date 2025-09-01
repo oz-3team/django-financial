@@ -1,6 +1,4 @@
-# settings/prod.py
-from .base import *
+from .base import *  # noqa: F403
 
-# PROD-specific overrides (예: DEBUG=False)
 DEBUG = False
-ALLOWED_HOSTS = ['15.164.219.24', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["43.201.76.173", "[::1]" "localhost", "127.0.0.1"]
