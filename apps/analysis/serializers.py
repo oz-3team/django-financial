@@ -4,6 +4,9 @@ from apps.accounts.models import TransactionHistory
 
 
 class AnalysisSerializer(serializers.ModelSerializer):
+    # 클라이언트가 보낼 필요 없이, 현재 요청을 보낸 사용자를 자동으로 할당
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = Analysis
         fields = "__all__"
