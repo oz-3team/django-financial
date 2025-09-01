@@ -22,41 +22,55 @@ jobs:
       - name: Deploy on EC2
         run: |
           ssh -t -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          set -e
-          APP_DIR=~/django-financial
-          cd $APP_DIR || { echo "❌ App directory not found"; exit 1; }
-          
-          echo "🛠 Fixing host static/media permissions..."
-          sudo chmod o+x /home/ubuntu
-          sudo chmod o+rx $APP_DIR
-          sudo chmod -R o+rX $APP_DIR/*
-          
-          echo "📥 Fetching latest code..."
-          git fetch origin ec2-damon
-          git reset --hard origin/ec2-damon
-          
-          echo "🐳 Restarting Docker Compose..."
-          docker-compose down --remove-orphans
-          
-          docker system prune -f
-          docker image prune -f
-          docker container prune -f
-          
-          docker-compose up -d --build
-          
-          echo "⏱️ Waiting for containers..."
-          sleep 10
-          
-          echo "📦 Collecting static files (container → host volume)..."
-          docker-compose exec web python manage.py collectstatic --noinput
-          
-          echo "🌐 Reloading Nginx..."
-          if command -v nginx >/dev/null 2>&1; then
-            sudo nginx -t && sudo systemctl reload nginx || echo "⚠️ Nginx reload failed"
-          fi
-          
-          echo "✅ Deployment completed!"
+            set -e
+            APP_DIR=~/django-financial
+            STATIC_DIR=$APP_DIR/staticfiles
+            MEDIA_DIR=$APP_DIR/media
+            USER=www-data
+
+            # 바로 APP_DIR로 이동
+            cd $APP_DIR || { echo "❌ App directory not found"; exit 1; }
+
+            echo "🛠 Ensuring static/media directories exist..."
+            # 생성 시도 실패(이미 있음)해도 넘어감
+            mkdir -p $STATIC_DIR
+            mkdir -p $MEDIA_DIR
+
+            echo "🔑 Setting directory permissions..."
+            #nginx 권한 설정
+            sudo chown -R $USER:$USER $STATIC_DIR $MEDIA_DIR
+            sudo chmod -R 755 $STATIC_DIR $MEDIA_DIR
+
+            # 상위 디렉터리 접근 권한 ( 거의 모든 경로에 다 권한주기)
+            sudo chmod o+x /home/ubuntu
+            sudo chmod o+rx $APP_DIR
+            sudo chmod -R o+rX $APP_DIR/*
+
+            echo "📥 Fetching latest code..."
+            # git 최신 커밋상태로
+            git fetch origin ec2-damon
+            git reset --hard origin/ec2-damon
+
+            echo "🐳 Restarting Docker Compose..."
+            # 생각보다 용량차지가 꽤 있어서 프룬을 썼으나, --noche 사용하며 간소화, 
+            docker-compose down --remove-orphans
+            docker-compose build --no-cache
+            docker-compose up -d
+
+            echo "⏱️ Waiting for containers..."
+            sleep 10
+
+            echo "📦 Collecting static files..."
+            docker-compose exec web python manage.py collectstatic --noinput
+
+            echo "🌐 Reloading Nginx..."
+            if command -v nginx >/dev/null 2>&1; then
+              sudo nginx -t && sudo systemctl reload nginx || echo "⚠️ Nginx reload failed"
+            fi
+
+            echo "✅ Deployment completed!"
           EOF
+      
 
       - name: Post-deployment verification
         run: |
