@@ -22,39 +22,40 @@ jobs:
       - name: Deploy on EC2
         run: |
           ssh -t -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e
-            APP_DIR=~/django-financial
-            cd $APP_DIR || { echo "❌ App directory not found"; exit 1; }
-
-            echo "🛠 Fixing permissions..."
-            sudo chown -R $USER:$USER $APP_DIR/staticfiles
-            sudo chmod -R 755 $APP_DIR/staticfiles
-
-            echo "📥 Fetching latest code..."
-            git fetch origin ec2-damon
-            git reset --hard origin/ec2-damon
-
-            echo "🐳 Restarting Docker Compose..."
-            docker-compose down --remove-orphans
-
-            docker system prune -f
-            docker image prune -f
-            docker container prune -f
-
-            docker-compose up -d --build
-
-            echo "⏱️ Waiting for containers..."
-            sleep 10
-
-            echo "📦 Collecting static files inside web container..."
-            docker-compose exec web python manage.py collectstatic --noinput
-
-            echo "🌐 Reloading Nginx..."
-            if command -v nginx >/dev/null 2>&1; then
-              sudo nginx -t && sudo systemctl reload nginx || echo "⚠️ Nginx reload failed"
-            fi
-
-            echo "✅ Deployment completed!"
+          set -e
+          APP_DIR=~/django-financial
+          cd $APP_DIR || { echo "❌ App directory not found"; exit 1; }
+          
+          echo "🛠 Fixing host static/media permissions..."
+          sudo chmod o+x /home/ubuntu
+          sudo chmod o+rx $APP_DIR
+          sudo chmod -R o+rX $APP_DIR/*
+          
+          echo "📥 Fetching latest code..."
+          git fetch origin ec2-damon
+          git reset --hard origin/ec2-damon
+          
+          echo "🐳 Restarting Docker Compose..."
+          docker-compose down --remove-orphans
+          
+          docker system prune -f
+          docker image prune -f
+          docker container prune -f
+          
+          docker-compose up -d --build
+          
+          echo "⏱️ Waiting for containers..."
+          sleep 10
+          
+          echo "📦 Collecting static files (container → host volume)..."
+          docker-compose exec web python manage.py collectstatic --noinput
+          
+          echo "🌐 Reloading Nginx..."
+          if command -v nginx >/dev/null 2>&1; then
+            sudo nginx -t && sudo systemctl reload nginx || echo "⚠️ Nginx reload failed"
+          fi
+          
+          echo "✅ Deployment completed!"
           EOF
 
       - name: Post-deployment verification

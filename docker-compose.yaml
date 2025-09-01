@@ -33,7 +33,6 @@ services:
       - /app/.venv          # .venv는 컨테이너 내부 유지
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
-      - ./nginx/conf.d:/etc/nginx/conf.d #nginx가 볼륨 내부를 볼 수 있게
 volumes:
   postgres_data:
 
