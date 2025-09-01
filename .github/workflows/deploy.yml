@@ -3,7 +3,7 @@ name: Deploy to EC2 via Docker Compose
 on:
   push:
     branches:
-      - ec2-damon
+      - test
 
 jobs:
   deploy:
