@@ -8,7 +8,7 @@ class AnalysisService:
     @staticmethod
     def get_transaction_queryset(analysis):
         """분석 대상 거래 내역 조회"""
-        user_accounts = Account.objects.filter(user=analysis.user)
+        user_accounts = Account.objects.filter(owner=analysis.user)
         qs = TransactionHistory.objects.filter(
             account__in=user_accounts,
             occurred_at__date__range=[analysis.start_date, analysis.end_date],
