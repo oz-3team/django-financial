@@ -40,8 +40,11 @@ jobs:
             docker-compose up -d --build
       
             echo "⏱️ Waiting for containers..."
-            sleep 15
-      
+            sleep 10
+            
+            echo "📦 Collecting static files..."
+            docker-compose exec web python manage.py collectstatic --noinput
+            
             echo "🌐 Reloading Nginx..."
             if command -v nginx >/dev/null 2>&1; then
               sudo nginx -t && sudo systemctl reload nginx || echo "⚠️ Nginx reload failed"
