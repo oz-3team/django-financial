@@ -1,0 +1,83 @@
+name: Deploy to EC2 via Docker Compose
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY_DAMON }}
+
+      - name: Deploy on EC2
+        run: |
+          ssh -t -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e
+            APP_DIR=~/django-financial
+            STATIC_DIR=$APP_DIR/staticfiles
+            MEDIA_DIR=$APP_DIR/media
+            USER=www-data
+
+            # 바로 APP_DIR로 이동
+            cd $APP_DIR || { echo "❌ App directory not found"; exit 1; }
+
+            echo "🛠 Ensuring static/media directories exist..."
+            # 생성 시도 실패(이미 있음)해도 넘어감
+            mkdir -p $STATIC_DIR
+            mkdir -p $MEDIA_DIR
+
+            echo "🔑 Setting directory permissions..."
+            #nginx 권한 설정
+            sudo chown -R ubuntu:ubuntu $STATIC_DIR $MEDIA_DIR
+            sudo chmod -R 755 $STATIC_DIR $MEDIA_DIR
+
+            # 상위 디렉터리 접근 권한 ( 거의 모든 경로에 다 권한주기)
+            sudo chmod o+x /home/ubuntu
+            sudo chmod o+rx $APP_DIR
+            sudo chmod -R o+rX $APP_DIR/*
+
+            echo "📥 Fetching latest code..."
+            # git 최신 커밋상태로
+            BRANCH=release
+            git fetch origin $BRANCH
+            git reset --hard origin/$BRANCH
+
+            echo "🐳 Restarting Docker Compose..."
+            # 용량으로 인한 CD 오류 귀찮아서 프룬 다시 복귀
+            docker-compose down --remove-orphans
+            
+            docker system prune -f
+            docker image prune -f
+            docker container prune -f
+            
+            docker-compose up -d --build
+
+            echo "⏱️ Waiting for containers..."
+            sleep 10
+
+            echo "📦 Collecting static files..."
+            docker-compose exec web python manage.py collectstatic --noinput
+
+            echo "🌐 Reloading Nginx..."
+            if command -v nginx >/dev/null 2>&1; then
+              sudo nginx -t && sudo systemctl reload nginx || echo "⚠️ Nginx reload failed"
+            fi
+
+            echo "✅ Deployment completed!"
+          EOF
+      
+
+      - name: Post-deployment verification
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            'cd ~/django-financial && docker-compose ps && echo "✅ Verification completed"'
